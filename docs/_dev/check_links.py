@@ -4,10 +4,9 @@
 import argparse
 from html.parser import HTMLParser
 from pathlib import Path
-import ssl
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
-from urllib.request import build_opener, HTTPRedirectHandler, HTTPSHandler, Request
+from urllib.request import build_opener, HTTPRedirectHandler, Request
 
 
 class Links(HTMLParser):
@@ -28,12 +27,9 @@ class NoRedirect(HTTPRedirectHandler):
 
 def check(url, published=False):
     host = urlsplit(url).hostname
-    note = "lab TLS chain incomplete" if host == "cg.skku.edu" else ""
     handlers = []
     if host == "doi.org":
         handlers.append(NoRedirect())
-    if host == "cg.skku.edu":
-        handlers.append(HTTPSHandler(context=ssl._create_unverified_context()))
     opener = build_opener(*handlers)
     request = Request(url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"}, method="GET")
     try:
@@ -43,7 +39,14 @@ def check(url, published=False):
             response = error
         with response:
             status = response.code
-            response.read(1)
+            if host == "dl.acm.org" and status == 403:
+                body = response.read(65536).lower()
+                challenge = (b"/cdn-cgi/challenge-platform/" in body
+                             or (b"cloudflare" in body and (b"challenge" in body or b"just a moment" in body)))
+                if challenge:
+                    return True, "CHALLENGE (verify in browser)", "403 Cloudflare challenge"
+            else:
+                response.read(1)
             if host == "doi.org":
                 location = response.headers.get("Location", "")
                 resolved = 300 <= status < 400 and urlsplit(location).hostname == "dl.acm.org"
@@ -55,9 +58,9 @@ def check(url, published=False):
                     resolved = status == 200
                     return resolved, f"{'OK' if resolved else 'FAIL'} ({status})", "published repository must return 200"
             resolved = status < 400
-            return resolved, f"{'OK' if resolved else 'FAIL'} ({status})", note
+            return resolved, f"{'OK' if resolved else 'FAIL'} ({status})", ""
     except (URLError, OSError, ValueError) as error:
-        return False, "FAIL", f"{note + '; ' if note else ''}{error}"
+        return False, "FAIL", str(error)
 
 
 def main():
@@ -66,7 +69,6 @@ def main():
     args = arguments.parse_args()
     parser = Links()
     parser.feed((Path(__file__).resolve().parents[1] / "index.html").read_text(encoding="utf-8"))
-    parser.urls.add("https://www.youtube.com/watch?v=cnR8iujBu7A")
     print("STATUS URL NOTE")
     failures = 0
     for url in sorted(parser.urls):

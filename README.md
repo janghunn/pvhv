@@ -10,7 +10,7 @@ This repository is an independent clean-room re-implementation written in 2026 f
 
 Applications of the method, such as depth-of-field rendering, are described in the [paper](https://doi.org/10.1145/3592108) and are not implemented in this re-implementation.
 
-The paper is by Janghun Kim and Sungkil Lee (Sungkyunkwan University, Suwon, South Korea), ACM Transactions on Graphics 42(4), Proc. SIGGRAPH 2023. The [paper page](https://cg.skku.edu/pub/2023-kim-siggraph-pvhv), with the camera-ready PDF, slides and video, is hosted by the Computer Graphics Lab at Sungkyunkwan University.
+The paper is by Janghun Kim and Sungkil Lee (Sungkyunkwan University, Suwon, South Korea), ACM Transactions on Graphics 42(4), Article 86, 2023: [paper (doi:10.1145/3592108)](https://doi.org/10.1145/3592108), [PDF in the ACM Digital Library](https://dl.acm.org/doi/pdf/10.1145/3592108).
 
 ## Layout
 
@@ -97,14 +97,24 @@ The full model downloads remain in the ignored cache. The demo redistributes re-
 ## Citation
 
 ```bibtex
-@article{kim23:pvhv,
-  title={{Potentially Visible Hidden-Volume Rendering for Multi-View Warping}},
-  author={Janghun Kim and Sungkil Lee},
-  journal={{ACM Trans. Graphics (Proc. SIGGRAPH)}},
-  volume={42},
-  number={4},
-  pages={86:1--11},
-  year={2023}
+@article{kim2023pvhv,
+author = {Kim, Janghun and Lee, Sungkil},
+title = {Potentially Visible Hidden-Volume Rendering for Multi-View Warping},
+year = {2023},
+issue_date = {August 2023},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {42},
+number = {4},
+issn = {0730-0301},
+url = {https://doi.org/10.1145/3592108},
+doi = {10.1145/3592108},
+abstract = {This paper presents the model and rendering algorithm of Potentially Visible Hidden Volumes (PVHVs) for multi-view image warping. PVHVs are 3D volumes that are occluded at a known source view, but potentially visible at novel views. Given a bound of novel views, we define PVHVs using the edges of foreground fragments from the known view and the bound of novel views. PVHVs can be used to batch-test the visibilities of source fragments without iterating individual novel views in multi-fragment rendering, and thereby, cull redundant fragments prior to warping. We realize the model of PVHVs in Depth Peeling (DP). Our Effective Depth Peeling (EDP) can reduce the number of completely hidden fragments, capture important fragments early, and reduce warping cost. We demonstrate the benefit of our PVHVs and EDP in terms of memory, quality, and performance in multi-view warping.},
+journal = {ACM Trans. Graph.},
+month = jul,
+articleno = {86},
+numpages = {11},
+keywords = {potentially visible hidden volume, visibility, multi-fragment rendering, depth peeling, view warping}
 }
 ```
 

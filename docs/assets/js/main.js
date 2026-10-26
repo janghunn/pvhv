@@ -22,21 +22,4 @@
       }
     });
   }
-
-  const load = document.getElementById('video-load');
-  const facade = document.getElementById('video-facade');
-  if (load && facade) {
-    load.addEventListener('click', () => {
-      const frame = document.createElement('iframe');
-      frame.src = 'https://www.youtube-nocookie.com/embed/cnR8iujBu7A?autoplay=1';
-      frame.title = 'SIGGRAPH 2023: Potentially Visible Hidden-Volume Rendering for Multi-View Warping';
-      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-      frame.referrerPolicy = 'strict-origin-when-cross-origin';
-      frame.allowFullscreen = true;
-      frame.loading = 'lazy';
-      frame.tabIndex = 0;
-      facade.replaceChildren(frame);
-      frame.focus();
-    });
-  }
 })();

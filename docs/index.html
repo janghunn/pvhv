@@ -28,7 +28,6 @@
         <a href="#method">Method</a>
         <a href="#demo">Demo</a>
         <a href="#results">Results</a>
-        <a href="#video">Video</a>
         <a href="#bibtex">BibTeX</a>
       </nav>
     </div>
@@ -37,12 +36,10 @@
     <section id="top" class="masthead">
       <h1 id="title">Potentially Visible Hidden-Volume Rendering for Multi-View Warping</h1>
       <p class="authors"><span id="authors">Janghun Kim and Sungkil Lee</span><span id="affiliation">Sungkyunkwan University, Suwon, South Korea</span></p>
-      <p class="venue"><a id="venue" href="https://doi.org/10.1145/3592108">ACM Trans. Graphics (Proc. SIGGRAPH), 42(4), 86:1–11, 2023.</a></p>
+      <p class="venue"><a id="venue" href="https://doi.org/10.1145/3592108">ACM Transactions on Graphics 42(4), Article 86, August 2023 (SIGGRAPH 2023)</a></p>
       <div class="btns">
         <a class="btn primary" href="https://doi.org/10.1145/3592108" target="_blank" rel="noopener noreferrer">Paper</a>
-        <a class="btn" href="https://cg.skku.edu/pub/papers/2023-kim-siggraph-pvhv-cam.pdf" title="Camera-ready PDF on the CGLab paper page" target="_blank" rel="noopener noreferrer">PDF</a>
-        <a class="btn" href="https://cg.skku.edu/pub/papers/2023-kim-siggraph-pvhv-slides.pdf" target="_blank" rel="noopener noreferrer">Slides</a>
-        <a class="btn" href="#video">Video</a>
+        <a class="btn" href="https://dl.acm.org/doi/pdf/10.1145/3592108" title="PDF from the ACM Digital Library (open access)" target="_blank" rel="noopener noreferrer">PDF</a>
         <a class="btn" href="https://github.com/janghunn/pvhv" target="_blank" rel="noopener noreferrer">Code</a>
         <a class="btn" href="#bibtex">BibTeX</a>
       </div>
@@ -96,36 +93,39 @@
         </figure>
       </div>
     </section>
-    <section id="video" class="card">
-      <h2>Paper video</h2>
-      <div class="video" id="video-facade">
-        <button type="button" id="video-load"><svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19 14 35 24 19 34Z" fill="currentColor"/></svg><span>Play video (loads YouTube)</span></button>
-      </div>
-      <p class="note">Video from the SIGGRAPH 2023 paper. <a href="https://www.youtube.com/watch?v=cnR8iujBu7A" target="_blank" rel="noopener noreferrer">Watch on YouTube</a>.</p>
-    </section>
     <section id="reimplementation" class="card note-card">
       <h2>About this re-implementation</h2>
       <p>The code, figures and interactive demo on this page come from an independent re-implementation written in 2026 from the published paper. They are not the code used for the paper's experiments, and they do not reproduce the paper's reported results. Code published by the Computer Graphics Lab at Sungkyunkwan University was not consulted.</p>
       <p>Applications of the method, such as depth-of-field rendering, are described in the <a href="https://doi.org/10.1145/3592108">paper</a> and are not implemented in this re-implementation.</p>
-      <p>The title, authors, venue, abstract and BibTeX are those of the published paper (ACM Transactions on Graphics 42(4), Proc. SIGGRAPH 2023). The paper's own page, with the camera-ready PDF, slides and video, is hosted by the Computer Graphics Lab at Sungkyunkwan University: <a href="https://cg.skku.edu/pub/2023-kim-siggraph-pvhv">cg.skku.edu/pub/2023-kim-siggraph-pvhv</a>.</p>
+      <p>The title, authors, venue, abstract and BibTeX are taken from the published paper's metadata in the ACM Digital Library and Crossref (doi:10.1145/3592108).</p>
     </section>
     <section id="bibtex" class="card">
       <h2>BibTeX</h2>
-      <pre id="citation" tabindex="0">@article{kim23:pvhv,
-  title={{Potentially Visible Hidden-Volume Rendering for Multi-View Warping}},
-  author={Janghun Kim and Sungkil Lee},
-  journal={{ACM Trans. Graphics (Proc. SIGGRAPH)}},
-  volume={42},
-  number={4},
-  pages={86:1--11},
-  year={2023}
-}</pre>
+      <pre id="citation" tabindex="0">@article{kim2023pvhv,
+author = {Kim, Janghun and Lee, Sungkil},
+title = {Potentially Visible Hidden-Volume Rendering for Multi-View Warping},
+year = {2023},
+issue_date = {August 2023},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {42},
+number = {4},
+issn = {0730-0301},
+url = {https://doi.org/10.1145/3592108},
+doi = {10.1145/3592108},
+abstract = {This paper presents the model and rendering algorithm of Potentially Visible Hidden Volumes (PVHVs) for multi-view image warping. PVHVs are 3D volumes that are occluded at a known source view, but potentially visible at novel views. Given a bound of novel views, we define PVHVs using the edges of foreground fragments from the known view and the bound of novel views. PVHVs can be used to batch-test the visibilities of source fragments without iterating individual novel views in multi-fragment rendering, and thereby, cull redundant fragments prior to warping. We realize the model of PVHVs in Depth Peeling (DP). Our Effective Depth Peeling (EDP) can reduce the number of completely hidden fragments, capture important fragments early, and reduce warping cost. We demonstrate the benefit of our PVHVs and EDP in terms of memory, quality, and performance in multi-view warping.},
+journal = {ACM Trans. Graph.},
+month = jul,
+articleno = {86},
+numpages = {11},
+keywords = {potentially visible hidden volume, visibility, multi-fragment rendering, depth peeling, view warping}
+}
+</pre>
       <button type="button" id="copy">Copy BibTeX</button>
       <p id="copy-status" class="note" role="status" aria-live="polite"></p>
     </section>
   </main>
   <footer class="wrap">
-    <p>Paper page: <a href="https://cg.skku.edu/pub/2023-kim-siggraph-pvhv">Computer Graphics Lab, Sungkyunkwan University</a>.</p>
     <p>Abstract and bibliographic data from the paper: J. Kim and S. Lee, ACM Trans. Graphics 42(4), 2023, doi:10.1145/3592108.</p>
     <p>Scene models: San Miguel 2.0 (CC BY 3.0), Amazon Lumberyard Bistro (CC BY 4.0), Chess Set by Riley Queen, Poly Haven (CC0 1.0); see the captions and the repository README.</p>
     <p>Lato font by Łukasz Dziedzic, SIL Open Font License 1.1.</p>

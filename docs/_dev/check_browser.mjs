@@ -335,6 +335,9 @@ async function checkWidth(origin, width, height) {
         lato700: document.fonts.check('700 16px Lato'), slots: document.querySelectorAll('[data-slot]').length,
         unfilledSlots: [...document.querySelectorAll('.slot-box')].filter(e => !e.closest('#demo-root')).length,
         demoPlaceholders: document.querySelectorAll('#demo-root .slot-box').length,
+        removedSectionPresent: Boolean(document.querySelector('#video')),
+        iframeCount: document.querySelectorAll('iframe').length,
+        resourceLabels: [...document.querySelectorAll('.btns a')].map(anchor => anchor.textContent.trim()),
         images: [...document.images].map(image => ({ src: image.getAttribute('src'), complete: image.complete,
           naturalWidth: image.naturalWidth })) };
       })()`));
@@ -343,6 +346,11 @@ async function checkWidth(origin, width, height) {
       if (result.slots !== 5) result.failures.push(`Expected 5 slots, found ${result.slots}`);
       if (result.unfilledSlots) result.failures.push(`${result.unfilledSlots} slot-box placeholders outside demo`);
       if (result.demoPlaceholders) result.failures.push('Demo placeholder was not replaced');
+      if (result.removedSectionPresent) result.failures.push('Removed media section is still present');
+      if (result.iframeCount) result.failures.push(`Expected no iframe, found ${result.iframeCount}`);
+      if (JSON.stringify(result.resourceLabels) !== JSON.stringify(['Paper', 'PDF', 'Code', 'BibTeX'])) {
+        result.failures.push(`Unexpected resource labels: ${JSON.stringify(result.resourceLabels)}`);
+      }
       for (const image of result.images) {
         if (!image.complete || image.naturalWidth <= 0) result.failures.push(`Image not decoded: ${image.src}`);
       }
@@ -387,7 +395,7 @@ async function checkWidth(origin, width, height) {
     } catch (error) {
       result.failures.push(`Screenshot: ${error.message}`);
     }
-    // Protocol round trip drains initial resource/error events before the video phase.
+    // Protocol round trip drains resource/error events before collection ends.
     try {
       await evaluate('document.readyState');
     } catch (error) {
@@ -395,17 +403,7 @@ async function checkWidth(origin, width, height) {
     }
     collecting = false;
     if (result.errors.length) result.failures.push(`${result.errors.length} console/runtime/log errors`);
-    if (result.externalRequests.length) result.failures.push(`${result.externalRequests.length} external requests before video activation`);
-
-    if (width === 1440) {
-      await send('Network.setBlockedURLs', { urls: ['*youtube*'] });
-      result.videoActivated = await evaluate(`(() => {
-        document.getElementById('video-load').click();
-        const frame = document.querySelector('#video-facade iframe');
-        return Boolean(frame && frame.src.startsWith('https://www.youtube-nocookie.com/embed/cnR8iujBu7A'));
-      })()`);
-      if (!result.videoActivated) result.failures.push('Video button failed to create the expected iframe');
-    }
+    if (result.externalRequests.length) result.failures.push(`${result.externalRequests.length} external requests`);
   } catch (error) {
     result.failures.push(error.message);
   } finally {

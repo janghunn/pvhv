@@ -18,12 +18,11 @@ DOCS = Path(__file__).resolve().parents[1]
 REQUIRED_SLOTS = {
     "teaser", "method-overview", "demo", "results-keep-cull", "results-comparison"
 }
-ALLOWED_HOSTS = {"doi.org", "cg.skku.edu", "github.com", "www.youtube.com"}
+ALLOWED_HOSTS = {"doi.org", "dl.acm.org", "github.com"}
 ATTRIBUTION_HOSTS = {"polyhaven.com", "creativecommons.org", "casual-effects.com", "developer.nvidia.com"}
 JS_ATTRIBUTION_URLS = {"https://polyhaven.com/a/chess_set", "https://creativecommons.org/publicdomain/zero/1.0/"}
 TEXT_SUFFIXES = {".html", ".css", ".js", ".mjs", ".json", ".md", ".svg", ".txt"}
 REIMPLEMENTATION_LABEL = "Re-implementation (2026), not the code used for the paper's experiments."
-VIDEO_URL = "https://www.youtube-nocookie.com/embed/cnR8iujBu7A"
 VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
 
 
@@ -109,33 +108,105 @@ def check_facts(page, facts):
     abstract = page.by_id("abstract-text").text()
     equal(collapse(abstract), collapse(facts["abstract"]), "abstract (whitespace collapsed)")
     equal(abstract.strip(), facts["abstract"], "abstract (exact)")
-    citation = page.by_id("citation").text().removeprefix("\n").rstrip()
+    citation = page.by_id("citation").text()
     equal(citation, facts["bibtex"], "bibtex")
-    return "title, authors, affiliation, venue, DOI, abstract and BibTeX match facts.json exactly"
+    readme = (DOCS.parent / "README.md").read_text(encoding="utf-8")
+    blocks = re.findall(r"^```bibtex\n(.*?)^```[ \t]*$", readme, re.M | re.S)
+    require(len(blocks) == 1, "README must contain exactly one fenced BibTeX block")
+    equal(blocks[0], citation, "README/page BibTeX")
+    return "title, authors, affiliation, venue, DOI, abstract and BibTeX match facts.json; README BibTeX matches exactly"
 
 
-def check_sources(args, facts):
+def check_navigation(page, facts):
+    rows = [node for node in page.nodes() if node.has_class("btns")]
+    require(len(rows) == 1, "expected one resource row")
+    anchors = [node for node in rows[0].descendants() if node.tag == "a"]
+    expected = [
+        ("Paper", "https://doi.org/10.1145/3592108"),
+        ("PDF", "https://dl.acm.org/doi/pdf/10.1145/3592108"),
+        ("Code", "https://github.com/janghunn/pvhv"),
+        ("BibTeX", "#bibtex"),
+    ]
+    equal([(node.text().strip(), node.attrs.get("href")) for node in anchors], expected, "resource buttons")
+    require(anchors[0].has_class("btn") and anchors[0].has_class("primary"), "Paper must be the primary button")
+    equal(anchors[1].attrs.get("title"), "PDF from the ACM Digital Library (open access)", "PDF title")
+    for node in anchors[:3]:
+        require(node.attrs.get("target") == "_blank"
+                and set((node.attrs.get("rel") or "").split()) == {"noopener", "noreferrer"},
+                f"{node.text()}: external resource must open safely in a new tab")
+    for key, index in (("doi_url", 0), ("pdf_url", 1), ("code_url", 2)):
+        equal(facts[key], expected[index][1], key)
+    nav = [node for node in page.nodes() if node.tag == "nav" and node.attrs.get("aria-label") == "Sections"]
+    require(len(nav) == 1, "expected one section navigation")
+    equal([node.text().strip() for node in nav[0].descendants() if node.tag == "a"],
+          ["Overview", "Method", "Demo", "Results", "BibTeX"], "section navigation")
+    return "exact Paper/PDF/Code/BibTeX resources and Overview/Method/Demo/Results/BibTeX navigation"
+
+
+def metadata_text(value):
+    if isinstance(value, list):
+        require(len(value) == 1, "expected one metadata value")
+        value = value[0]
+    return str(value)
+
+
+def check_work(work, facts, fields, label, journal_names):
+    equal(metadata_text(work["title"]), facts["title"], f"{label}/title")
+    authors = work["author"]
+    require(authors, f"{label} has no authors")
+    names = " and ".join(f"{author['given']} {author['family']}" for author in authors)
+    equal(names, facts["authors"], f"{label}/ordered authors")
+    doi = urlsplit(facts["doi_url"]).path.lstrip("/")
+    equal(work["DOI"], doi, f"{label}/DOI")
+    equal(fields["doi"], doi, f"{label}/BibTeX DOI")
+    journal = metadata_text(work["container-title"])
+    require(journal in journal_names, f"{label}: unexpected journal {journal}")
+    journal = journal_names[journal]
+    equal(journal, "ACM Transactions on Graphics", f"{label}/journal")
+    for key, bib_key, expected in (("volume", "volume", "42"), ("issue", "number", "4")):
+        equal(str(work[key]), expected, f"{label}/{key}")
+        equal(fields[bib_key], expected, f"{label}/BibTeX {bib_key}")
+    year = str(work["issued"]["date-parts"][0][0])
+    equal(year, "2023", f"{label}/year")
+    equal(fields["year"], year, f"{label}/BibTeX year")
+    abstract = unescape(re.sub(r"</?jats:[^>]+>", "", work["abstract"]))
+    equal(collapse(abstract), collapse(facts["abstract"]), f"{label}/abstract")
+    venue = f"{journal} {work['volume']}({work['issue']}), Article {fields['articleno']}, {fields['issue_date']}"
+    require(facts["venue"] in (venue, venue + " (SIGGRAPH 2023)"), f"{label}: venue differs from metadata")
+
+
+def check_sources(args, facts, page):
     checked = []
-    if args.lab:
-        source = args.lab.read_text(encoding="utf-8")
-        patterns = {
-            "title": r"class=['\"]gtitle-detail['\"]>(.*?)<",
-            "authors": r"class=['\"]author-detail['\"]>(.*?)<",
-            "venue": r'<a\s+href=[\"]https://doi.org/10\.1145/3592108[\"]>(.*?)</a>',
-            "abstract": r"class=['\"]abstract-detail['\"]>(.*?)</div>",
-            "bibtex": r"class=['\"]bibtex-detail['\"]>(.*?)</div>",
-        }
-        for key, pattern in patterns.items():
-            match = re.search(pattern, source, re.S)
-            require(match, f"lab {key} not found")
-            equal(unescape(match.group(1)).strip(), facts[key], f"lab/{key}")
-        checked.append("lab facts match verbatim")
+    fields = dict(re.findall(r"^(\w+) = \{(.*)\},?$", facts["bibtex"], re.M))
     if args.crossref:
-        authors = json.loads(args.crossref.read_text(encoding="utf-8"))["message"]["author"]
-        require(authors, "Crossref has no authors")
-        for index, author in enumerate(authors):
-            equal(author["affiliation"][0]["name"], facts["affiliation"], f"Crossref author {index + 1}")
-        checked.append("all Crossref affiliations match")
+        data = json.loads(args.crossref.read_text(encoding="utf-8"))
+        work = data.get("message", data)
+        check_work(work, facts, fields, "Crossref", {"ACM Transactions on Graphics": "ACM Transactions on Graphics"})
+        for index, author in enumerate(work["author"], 1):
+            affiliations = author["affiliation"]
+            require(affiliations, f"Crossref author {index} has no affiliations")
+            for affiliation in affiliations:
+                equal(affiliation["name"], facts["affiliation"], f"Crossref author {index} affiliation")
+        checked.append("Crossref metadata and every author affiliation match")
+    if args.acm:
+        items = json.loads(args.acm.read_text(encoding="utf-8"))
+        doi = urlsplit(facts["doi_url"]).path.lstrip("/")
+        require(len(items) == 1 and set(items[0]) == {doi}, "expected one ACM citation item for the paper DOI")
+        work = items[0][doi]
+        check_work(work, facts, fields, "ACM", {"ACM Trans. Graph.": "ACM Transactions on Graphics"})
+        equal(str(work["collection-number"]), "86", "ACM/article number")
+        require(f"Article {work['collection-number']}" in facts["venue"], "ACM article number missing from venue")
+        equal(str(work["number-of-pages"]), "11", "ACM/page count")
+        for key, bib_key in (("collection-number", "articleno"), ("number-of-pages", "numpages"),
+                             ("ISSN", "issn"), ("URL", "url")):
+            equal(str(work[key]), fields[bib_key], f"ACM/BibTeX {bib_key}")
+        checked.append("ACM metadata, article/page counts, ISSN and URL match")
+    if args.acm_bib:
+        bibtex = args.acm_bib.read_text(encoding="utf-8")
+        require(bibtex.startswith("@article{10.1145/3592108,\n"), "unexpected ACM BibTeX key line")
+        expected = bibtex.replace("@article{10.1145/3592108,", "@article{kim2023pvhv,", 1)
+        equal(page.by_id("citation").text(), expected, "ACM/BibTeX (only citation key changed)")
+        checked.append("ACM BibTeX matches byte-for-byte except the citation key")
     return "; ".join(checked) or "no optional source files supplied"
 
 
@@ -258,8 +329,13 @@ def check_captions(page, source):
     require(not re.search(r"identical", source, re.I), "page contains identical")
     applications = [node for node in page.nodes() if node.tag == "p"
                     and re.search(r"depth." r"of.field|\bd" r"of\b", node.text(), re.I)]
-    require(len(applications) <= 1, "more than one applications paragraph")
-    return "output captions include provenance and model credits; applications appear in at most one paragraph"
+    require(len(applications) == 1, "expected exactly one applications paragraph")
+    paragraph = applications[0]
+    require("Applications of the method, such as depth-of-field rendering, are described in the" in paragraph.text(),
+            "applications paragraph missing the depth-of-field pointer")
+    require(any(node.tag == "a" and node.attrs.get("href") == "https://doi.org/10.1145/3592108"
+                for node in paragraph.descendants()), "applications paragraph must link to the paper DOI")
+    return "output captions include provenance and model credits; exactly one applications paragraph links to the paper"
 
 
 def site_files():
@@ -295,11 +371,29 @@ def check_resources():
                 r"(?:\b(?:fetch|import|importScripts|Worker|SharedWorker|EventSource|WebSocket)\s*\(\s*"
                 r"|\b(?:from|import)\s+|\.(?:src|srcset)\s*=\s*"
                 r"|\.setAttribute\(\s*['\"](?:src|srcset)['\"]\s*,\s*)['\"`](https?://[^\s'\"`<>]+)", source)
-            require(all(url.split("?", 1)[0] == VIDEO_URL for url in loads),
-                    f"{path.name}: external JS resource {loads}")
-    require(js_urls and all(url.split("?", 1)[0] == VIDEO_URL or url in JS_ATTRIBUTION_URLS
-                            for url in js_urls), f"unapproved absolute JS URLs: {js_urls}")
-    return "all initial resources local; attribution anchor hosts and click-to-load video allowed"
+            require(not loads, f"{path.name}: external JS resource {loads}")
+    require(all(url in JS_ATTRIBUTION_URLS for url in js_urls), f"unapproved absolute JS URLs: {js_urls}")
+    return "all resources local; only approved attribution URLs allowed in JavaScript"
+
+
+def check_forbidden_references():
+    pattern = re.compile("|".join([
+        "cg" + r"\.skku", "cg" + "skku", "you" + "tube", "youtu" + r"\.be",
+        "cnR8" + "iujBu7A", "slide" + "s",
+    ]), re.I)
+    paths = sorted(path for path in DOCS.rglob("*") if path.is_file()
+                   and "__pycache__" not in path.relative_to(DOCS).parts)
+    paths.append(DOCS.parent / "README.md")
+    for path in paths:
+        data = path.read_bytes()
+        if b"\0" in data:
+            continue
+        try:
+            source = data.decode("utf-8")
+        except UnicodeDecodeError:
+            continue
+        require(not pattern.search(source), f"forbidden resource reference in {path.relative_to(DOCS.parent)}")
+    return "served files, development checks and README contain no forbidden resource references"
 
 
 def forbidden(path):
@@ -364,8 +458,9 @@ def check_leftovers():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--lab", type=Path)
     parser.add_argument("--crossref", type=Path)
+    parser.add_argument("--acm", type=Path)
+    parser.add_argument("--acm-bib", type=Path)
     args = parser.parse_args()
     try:
         source = (DOCS / "index.html").read_text(encoding="utf-8")
@@ -376,12 +471,14 @@ def main():
         return 1
     checks = [
         ("facts", lambda: check_facts(page, facts)),
-        ("sources", lambda: check_sources(args, facts)),
+        ("navigation", lambda: check_navigation(page, facts)),
+        ("sources", lambda: check_sources(args, facts, page)),
         ("slots", lambda: check_slots(page)),
         ("slots-filled", lambda: check_slots_filled(page)),
         ("captions", lambda: check_captions(page, source)),
         ("a11y", lambda: check_a11y(page)),
         ("external-resources", check_resources),
+        ("forbidden-references", check_forbidden_references),
         ("forbidden-files", check_files),
         ("reimplementation", lambda: check_note(page)),
         ("contrast", check_contrast),
