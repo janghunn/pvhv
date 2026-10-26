@@ -6,7 +6,7 @@ Effective depth peeling (EDP) with potentially visible hidden volumes (PVHVs), a
 
 ## Provenance
 
-This repository is an independent clean-room re-implementation written in 2026 from the published paper text. Code published by the Computer Graphics Lab at Sungkyunkwan University was not consulted. It is not the code used for the paper's experiments, and its figures and numbers are not the paper's results.
+This repository is an independent clean-room re-implementation written in 2026 from the published paper text. It is not the code used for the paper's experiments, and its figures and numbers are not the paper's results.
 
 Applications of the method, such as depth-of-field rendering, are described in the [paper](https://doi.org/10.1145/3592108) and are not implemented in this re-implementation.
 

@@ -446,6 +446,7 @@ def check_forbidden_references():
     pattern = re.compile("|".join([
         "cg" + r"\.skku", "cg" + "skku", "you" + "tube", "youtu" + r"\.be",
         "cnR8" + "iujBu7A", "slide" + "s",
+        "graphics" + r"\s+lab",
     ]), re.I)
     paths = sorted(path for path in DOCS.rglob("*") if path.is_file()
                    and "__pycache__" not in path.relative_to(DOCS).parts)
