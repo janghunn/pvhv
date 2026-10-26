@@ -1,0 +1,16 @@
+{
+  "name": "bistro",
+  "description": "Amazon Lumberyard Bistro exterior (centimetres, scaled to metres), street with facades, cafe chairs and lamp posts. Final figure camera.",
+  "camera": {"eye": [-3.0, 1.7, -4.0], "target": [12.0, 2.0, -30.0], "up": [0.0, 1.0, 0.0],
+             "fovy": 50.0, "W": 960, "H": 540, "guard": 1.2},
+  "near": 0.5,
+  "far": 60.0,
+  "E": 0.08,
+  "cull_backfaces": false,
+  "samples": 14,
+  "background": [0.62, 0.74, 0.86],
+  "objects": [
+    {"model": "bistro", "obj": "bistro/Exterior/exterior.obj",
+     "transform": [[0.01, 0, 0, 0], [0, 0.01, 0, 0], [0, 0, 0.01, 0], [0, 0, 0, 1]]}
+  ]
+}

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500" role="img" aria-labelledby="title description">
+  <title id="title">Potentially visible hidden volume behind a foreground edge</title>
+  <desc id="description">Depth increases to the right. The blue wedge is hidden from the source view but visible from part of the novel-view bound. EDP keeps hidden fragments in this wedge and culls fragments beyond it.</desc>
+  <rect width="1000" height="500" fill="#fffdf9"/>
+  <g font-family="Lato, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#1d2127">
+    <path d="M260 250 540 250 540 138Z" fill="#0072b2" fill-opacity=".18"/>
+    <g fill="none" stroke="#5d6570" stroke-width="2" stroke-dasharray="8 6">
+      <path d="M60 250H540"/>
+      <path d="M60 330 540 138"/>
+    </g>
+    <path d="M60 170V330" stroke="#0072b2" stroke-width="6"/>
+    <path d="M260 90V250" stroke="#1d2127" stroke-width="8"/>
+    <path d="M480 60V162" stroke="#F2A65A" stroke-width="10"/>
+    <path d="M480 162V250" stroke="#0072b2" stroke-width="10"/>
+    <path d="M480 250V440" stroke="#5d6570" stroke-width="10"/>
+    <circle cx="60" cy="250" r="7" fill="#1d2127"/>
+    <circle cx="260" cy="250" r="6" fill="#1d2127"/>
+    <g fill="none" stroke="#5d6570" stroke-width="1.5">
+      <path d="M60 105V160"/>
+      <path d="M60 263 28 370"/>
+      <path d="M268 259 285 279"/>
+      <path d="M430 90H470"/>
+      <path d="M420 350H470"/>
+    </g>
+    <text x="16" y="43">novel-view bound</text>
+    <text x="16" y="74">(radius E)</text>
+    <text x="16" y="401">source view</text>
+    <text x="280" y="304">foreground edge</text>
+    <text x="340" y="224" fill="#0072b2">PVHV</text>
+    <text x="305" y="83">culled</text>
+    <text x="270" y="115" fill="#5d6570">(hidden from every</text>
+    <text x="310" y="145" fill="#5d6570">novel view)</text>
+    <text x="494" y="208">kept</text>
+    <text x="270" y="381" fill="#5d6570">visible at source</text>
+    <text x="330" y="412" fill="#5d6570">(layer 0)</text>
+    <path d="M60 461H540m-10-7 10 7-10 7" fill="none" stroke="#5d6570" stroke-width="2"/>
+    <text x="270" y="492" fill="#5d6570">depth</text>
+    <path d="M590 28V472" stroke="#ddd7cc" stroke-width="2"/>
+    <text x="612" y="49" font-weight="700">Hidden fragments</text>
+    <text x="612" y="102">Depth peeling:</text>
+    <text x="612" y="133">keeps every hidden fragment</text>
+    <g fill="#0072b2">
+      <rect x="615" y="154" width="54" height="43" rx="4"/>
+      <rect x="687" y="154" width="54" height="43" rx="4"/>
+      <rect x="759" y="154" width="54" height="43" rx="4"/>
+      <rect x="831" y="154" width="54" height="43" rx="4"/>
+      <rect x="903" y="154" width="54" height="43" rx="4"/>
+    </g>
+    <text x="612" y="259">EDP:</text>
+    <text x="612" y="290">culls fragments outside PVHVs</text>
+    <g fill="#0072b2">
+      <rect x="615" y="311" width="54" height="43" rx="4"/>
+      <rect x="759" y="311" width="54" height="43" rx="4"/>
+    </g>
+    <g fill="none" stroke="#F2A65A" stroke-width="3" stroke-dasharray="6 4">
+      <rect x="687" y="311" width="54" height="43" rx="4"/>
+      <rect x="831" y="311" width="54" height="43" rx="4"/>
+      <rect x="903" y="311" width="54" height="43" rx="4"/>
+    </g>
+    <text x="612" y="426">→ warp to novel views</text>
+  </g>
+</svg>

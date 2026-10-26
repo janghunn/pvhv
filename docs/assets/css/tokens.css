@@ -1,0 +1,19 @@
+/* Warm-paper palette, Okabe-Ito blue accent; all text pairs checked for WCAG AA by docs/_dev/check_static.py. */
+:root {
+  --bg:#f5f2ec;
+  --surface:#fffdf9;
+  --ink:#1d2127;
+  --muted:#5d6570;
+  --line:#ddd7cc;
+  --accent:#0072b2;
+  --accent-ink:#ffffff;
+  --note-tint:#e8f2fa;
+  --control:#7d7466;
+  --paint:#98520b;
+  --font-sans:"Lato","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --s1:.25rem; --s2:.5rem; --s3:1rem; --s4:1.5rem; --s5:2.5rem; --s6:4rem;
+  --r:10px;
+  --card-r:16px;
+  --maxw:1080px;
+}

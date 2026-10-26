@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PVHV demo harness</title>
+<link rel="icon" href="data:,">
+<style>
+  /* Values of the project page's tokens (docs/assets/css/tokens.css). */
+  :root {
+    --bg:#f5f2ec; --surface:#fffdf9; --ink:#1d2127; --muted:#5d6570; --line:#ddd7cc;
+    --accent:#0072b2; --accent-ink:#ffffff; --control:#7d7466; --paint:#98520b;
+    --r:10px; --card-r:16px; --maxw:1080px;
+  }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; background:var(--bg); color:var(--ink); line-height:1.55;
+    font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif; }
+  .wrap { max-width:var(--maxw); margin:0 auto; padding:0 1rem; }
+  header { padding:2rem 0 1rem; }
+  h1 { margin:0; font-size:1.5rem; }
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:var(--card-r);
+    padding:1.5rem; margin:1rem 0 2.5rem; }
+  .card h2 { margin:0 0 1rem; font-size:1.25rem; }
+  .slot-box { display:flex; align-items:center; justify-content:center; border:1px dashed var(--control);
+    border-radius:var(--r); color:var(--muted); }
+  .note { color:var(--muted); font-size:.9rem; margin:.75rem 0 0; }
+</style>
+<script>
+  // Test-only switch (the shipped code has none): ?simulate=no-float-rt hides EXT_color_buffer_float.
+  if (new URLSearchParams(location.search).get('simulate') === 'no-float-rt' && window.WebGL2RenderingContext) {
+    var original = WebGL2RenderingContext.prototype.getExtension;
+    WebGL2RenderingContext.prototype.getExtension = function (name) {
+      return name === 'EXT_color_buffer_float' ? null : original.call(this, name);
+    };
+  }
+</script>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>PVHV / EDP demo harness</h1></header>
+  <main>
+    <section class="card" aria-labelledby="demo-title">
+      <h2 id="demo-title">Interactive demo</h2>
+      <div class="slot" data-slot="demo" data-src="assets/js/demo.js" data-aspect="16:9" id="demo-root"><div class="slot-box" style="aspect-ratio:16/9" role="img" aria-label="Placeholder: interactive demo (to be added)">Interactive demo (to be added)</div><p class="note">The interactive WebGL2 demo runs the 2026 re-implementation in your browser.</p></div>
+    </section>
+  </main>
+</div>
+<script src="../docs/assets/js/demo.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Potentially Visible Hidden-Volume Rendering for Multi-View Warping</title>
+  <meta name="description" content="This paper presents the model and rendering algorithm of Potentially Visible Hidden Volumes (PVHVs) for multi-view image warping.">
+  <meta property="og:title" content="Potentially Visible Hidden-Volume Rendering for Multi-View Warping">
+  <meta property="og:description" content="This paper presents the model and rendering algorithm of Potentially Visible Hidden Volumes (PVHVs) for multi-view image warping.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://janghunn.github.io/pvhv/">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/Lato-900.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/Lato-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script src="assets/js/main.js" defer></script>
+  <script src="assets/js/demo.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="#top"><svg viewBox="0 0 40 36" width="32" height="29" aria-hidden="true"><rect x="3" y="3" width="22" height="12" rx="3" fill="#005381"/><rect x="9" y="12" width="22" height="12" rx="3" fill="#00649c"/><rect x="15" y="21" width="22" height="12" rx="3" fill="#0072b2"/></svg>PVHV</a>
+      <nav aria-label="Sections">
+        <a href="#overview">Overview</a>
+        <a href="#method">Method</a>
+        <a href="#demo">Demo</a>
+        <a href="#results">Results</a>
+        <a href="#video">Video</a>
+        <a href="#bibtex">BibTeX</a>
+      </nav>
+    </div>
+  </header>
+  <main id="main" tabindex="-1" class="wrap">
+    <section id="top" class="masthead">
+      <h1 id="title">Potentially Visible Hidden-Volume Rendering for Multi-View Warping</h1>
+      <p class="authors"><span id="authors">Janghun Kim and Sungkil Lee</span><span id="affiliation">Sungkyunkwan University, Suwon, South Korea</span></p>
+      <p class="venue"><a id="venue" href="https://doi.org/10.1145/3592108">ACM Trans. Graphics (Proc. SIGGRAPH), 42(4), 86:1–11, 2023.</a></p>
+      <div class="btns">
+        <a class="btn primary" href="https://doi.org/10.1145/3592108" target="_blank" rel="noopener noreferrer">Paper</a>
+        <a class="btn" href="https://cg.skku.edu/pub/papers/2023-kim-siggraph-pvhv-cam.pdf" title="Camera-ready PDF on the CGLab paper page" target="_blank" rel="noopener noreferrer">PDF</a>
+        <a class="btn" href="https://cg.skku.edu/pub/papers/2023-kim-siggraph-pvhv-slides.pdf" target="_blank" rel="noopener noreferrer">Slides</a>
+        <a class="btn" href="#video">Video</a>
+        <a class="btn" href="https://github.com/janghunn/pvhv" target="_blank" rel="noopener noreferrer">Code</a>
+        <a class="btn" href="#bibtex">BibTeX</a>
+      </div>
+      <p class="reimpl-flag">Code, figures and demo on this page: independent 2026 re-implementation — <a href="#reimplementation">details</a>.</p>
+    </section>
+    <section id="overview" aria-label="Overview">
+      <figure class="slot" data-slot="teaser" data-src="assets/img/teaser.webp" data-aspect="16:9">
+          <img src="assets/img/teaser.webp" width="1920" height="1080" alt="The San Miguel courtyard rendered in Blender Cycles; right of a slanted seam, the first hidden layer behind the same pixels, coloured by whether the PVHV test keeps or culls each fragment." decoding="async">
+          <figcaption>Left: the San Miguel courtyard path-traced in Blender Cycles 5.2.2 from the source camera of our re-implementation. Right of the seam: the first hidden layer (h = 1) behind the same pixels, computed by the re-implementation's PVHV test: fragments it keeps are shown in their own colour, fragments it culls in dark orange-brown, and pixels with no hidden surface in dark slate. Re-implementation (2026), not the code used for the paper's experiments. <span class="credit">San Miguel 2.0 © Guillermo M. Leal Llaguno (Evolución Visual); 2017 version by Morgan McGuire, Guedis Cardenas, Michael Mara and Nicholas Hull; from <a href="https://casual-effects.com/data/">Morgan McGuire's Computer Graphics Archive</a>; licensed <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.</span></figcaption>
+        </figure>
+    </section>
+    <section id="takeaway" class="band" aria-label="Takeaway">
+      <p>PVHVs mark what is hidden at the source view but may become visible within a bound of novel views — so depth peeling keeps only the fragments that can matter after warping.</p>
+    </section>
+    <section id="abstract" class="card">
+      <h2>Abstract</h2>
+      <p id="abstract-text">This paper presents the model and rendering algorithm of Potentially Visible Hidden Volumes (PVHVs) for multi-view image warping. PVHVs are 3D volumes that are occluded at a known source view, but potentially visible at novel views. Given a bound of novel views, we define PVHVs using the edges of foreground fragments from the known view and the bound of novel views. PVHVs can be used to batch-test the visibilities of source fragments without iterating individual novel views in multi-fragment rendering, and thereby, cull redundant fragments prior to warping. We realize the model of PVHVs in Depth Peeling (DP). Our Effective Depth Peeling (EDP) can reduce the number of completely hidden fragments, capture important fragments early, and reduce warping cost. We demonstrate the benefit of our PVHVs and EDP in terms of memory, quality, and performance in multi-view warping.</p>
+    </section>
+    <section id="method" class="card">
+      <div class="panel-head"><span class="disc" aria-hidden="true">1</span><h2>Method overview</h2></div>
+      <figure class="slot" data-slot="method-overview" data-src="assets/img/method-overview.svg" data-aspect="2:1">
+          <img src="assets/img/method-overview.svg" width="1000" height="500" alt="Foreground fragment edges and a novel-view bound define the PVHVs used in Effective Depth Peeling." decoding="async">
+          <figcaption>Method overview (schematic, 2D cross-section drawn for this page): the PVHV behind a foreground edge is the region hidden from the source view but visible from some viewpoint inside the novel-view bound. Effective Depth Peeling keeps hidden fragments inside PVHVs and culls the rest.</figcaption>
+        </figure>
+      <ul>
+        <li>A PVHV is a 3D volume that is occluded at the known source view but potentially visible from novel views inside a given bound; it is defined from the edges of foreground fragments and that bound of novel views.</li>
+        <li>PVHVs batch-test the visibility of source fragments without iterating over individual novel views, so redundant fragments are culled before warping.</li>
+        <li>Effective Depth Peeling (EDP) realizes PVHVs in depth peeling: it reduces completely hidden fragments, captures important fragments early and reduces warping cost.</li>
+      </ul>
+    </section>
+    <section id="demo" class="card">
+      <div class="panel-head"><span class="disc" aria-hidden="true">2</span><h2>Interactive demo</h2></div>
+      <div class="slot" data-slot="demo" data-src="assets/js/demo.js" data-aspect="16:9" id="demo-root">
+          <div class="slot-box" style="aspect-ratio:16/9" role="img" aria-label="Placeholder: interactive demo (to be added)">
+            <span class="slot-tag">Demo placeholder</span><span class="slot-name">demo</span><span class="slot-meta">assets/js/demo.js · 16:9</span>
+          </div>
+          <p class="note">Runs the 2026 re-implementation (WebGL2) in your browser on a CC0 chess set and a procedural blocks scene; without WebGL2 a notice is shown instead.</p>
+        </div>
+    </section>
+    <section id="results" class="card">
+      <div class="panel-head"><span class="disc" aria-hidden="true">3</span><h2>Results (re-implementation)</h2></div>
+      <p class="note">Rendered with the 2026 re-implementation on new 3D models; these are not the paper's figures or results.</p>
+      <div class="gallery">
+        <figure class="slot" data-slot="results-keep-cull" data-src="assets/img/results-keep-cull.webp" data-aspect="1950:625">
+          <img src="assets/img/results-keep-cull.webp" width="1950" height="625" alt="Source fragments marked as kept or culled by potentially visible hidden volumes." decoding="async">
+          <figcaption>Hidden layer h = 1 of full depth peeling (BDP): fragments EDP keeps in their own colour, fragments it culls tinted orange; then the EDP and UDP layers h = 1. San Miguel (top) and Bistro (bottom). Panel titles give fractions measured by the re-implementation for this view, not results from the paper. Re-implementation (2026), not the code used for the paper's experiments. <span class="credit">San Miguel 2.0 © Guillermo M. Leal Llaguno (Evolución Visual); 2017 version by Morgan McGuire, Guedis Cardenas, Michael Mara and Nicholas Hull; from <a href="https://casual-effects.com/data/">Morgan McGuire's Computer Graphics Archive</a>; licensed <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.</span> <span class="credit">Amazon Lumberyard Bistro © 2017 Amazon Lumberyard; released in the <a href="https://developer.nvidia.com/orca/amazon-lumberyard-bistro">NVIDIA ORCA collection</a>; via Morgan McGuire's Computer Graphics Archive; licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.</span></figcaption>
+        </figure>
+        <figure class="slot" data-slot="results-comparison" data-src="assets/img/results-comparison.webp" data-aspect="1950:625">
+          <img src="assets/img/results-comparison.webp" width="1950" height="625" alt="For San Miguel and Bistro, a direct render of a novel view next to the same view warped from a single layer, from full depth peeling and from Effective Depth Peeling fragments." decoding="async">
+          <figcaption>A novel view on the bound: direct render (reference) and warps from a single layer, full depth peeling (BDP) and EDP fragments; magenta marks holes, the inset enlarges the boxed region. Hole fractions are measured by the re-implementation for this view, not results from the paper. Re-implementation (2026), not the code used for the paper's experiments. <span class="credit">San Miguel 2.0 © Guillermo M. Leal Llaguno (Evolución Visual); 2017 version by Morgan McGuire, Guedis Cardenas, Michael Mara and Nicholas Hull; from <a href="https://casual-effects.com/data/">Morgan McGuire's Computer Graphics Archive</a>; licensed <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.</span> <span class="credit">Amazon Lumberyard Bistro © 2017 Amazon Lumberyard; released in the <a href="https://developer.nvidia.com/orca/amazon-lumberyard-bistro">NVIDIA ORCA collection</a>; via Morgan McGuire's Computer Graphics Archive; licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.</span></figcaption>
+        </figure>
+      </div>
+    </section>
+    <section id="video" class="card">
+      <h2>Paper video</h2>
+      <div class="video" id="video-facade">
+        <button type="button" id="video-load"><svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19 14 35 24 19 34Z" fill="currentColor"/></svg><span>Play video (loads YouTube)</span></button>
+      </div>
+      <p class="note">Video from the SIGGRAPH 2023 paper. <a href="https://www.youtube.com/watch?v=cnR8iujBu7A" target="_blank" rel="noopener noreferrer">Watch on YouTube</a>.</p>
+    </section>
+    <section id="reimplementation" class="card note-card">
+      <h2>About this re-implementation</h2>
+      <p>The code, figures and interactive demo on this page come from an independent re-implementation written in 2026 from the published paper. They are not the code used for the paper's experiments, and they do not reproduce the paper's reported results. Code published by the Computer Graphics Lab at Sungkyunkwan University was not consulted.</p>
+      <p>Applications of the method, such as depth-of-field rendering, are described in the <a href="https://doi.org/10.1145/3592108">paper</a> and are not implemented in this re-implementation.</p>
+      <p>The title, authors, venue, abstract and BibTeX are those of the published paper (ACM Transactions on Graphics 42(4), Proc. SIGGRAPH 2023). The paper's own page, with the camera-ready PDF, slides and video, is hosted by the Computer Graphics Lab at Sungkyunkwan University: <a href="https://cg.skku.edu/pub/2023-kim-siggraph-pvhv">cg.skku.edu/pub/2023-kim-siggraph-pvhv</a>.</p>
+    </section>
+    <section id="bibtex" class="card">
+      <h2>BibTeX</h2>
+      <pre id="citation" tabindex="0">@article{kim23:pvhv,
+  title={{Potentially Visible Hidden-Volume Rendering for Multi-View Warping}},
+  author={Janghun Kim and Sungkil Lee},
+  journal={{ACM Trans. Graphics (Proc. SIGGRAPH)}},
+  volume={42},
+  number={4},
+  pages={86:1--11},
+  year={2023}
+}</pre>
+      <button type="button" id="copy">Copy BibTeX</button>
+      <p id="copy-status" class="note" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+  <footer class="wrap">
+    <p>Paper page: <a href="https://cg.skku.edu/pub/2023-kim-siggraph-pvhv">Computer Graphics Lab, Sungkyunkwan University</a>.</p>
+    <p>Abstract and bibliographic data from the paper: J. Kim and S. Lee, ACM Trans. Graphics 42(4), 2023, doi:10.1145/3592108.</p>
+    <p>Scene models: San Miguel 2.0 (CC BY 3.0), Amazon Lumberyard Bistro (CC BY 4.0), Chess Set by Riley Queen, Poly Haven (CC0 1.0); see the captions and the repository README.</p>
+    <p>Lato font by Łukasz Dziedzic, SIL Open Font License 1.1.</p>
+  </footer>
+</body>
+</html>

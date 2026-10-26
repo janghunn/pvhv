@@ -1,0 +1,65 @@
+{
+ "files": [
+  {
+   "bytes": 780,
+   "path": "ATTRIBUTION.md",
+   "sha256": "4fbb2a73176ddd8e493714c524010819008348893546728cedb094545d02ca48"
+  },
+  {
+   "bytes": 218076,
+   "path": "blocks/geometry.bin",
+   "sha256": "4e796320f1a4068f33d613cb4e1e412f45ba7c0f641c2601fa32b34d5620c497"
+  },
+  {
+   "bytes": 9751,
+   "path": "blocks/scene.json",
+   "sha256": "faf9544e4189df5c6679d755e330c902f709739f9fd6e6c8e0926c735c46ee27"
+  },
+  {
+   "bytes": 602985,
+   "path": "chess/chess_set_board_diff_1k.jpg",
+   "sha256": "cca44d214f48ebe2205362a3996265d1fed727e094835bec2c873e91c653eaa5"
+  },
+  {
+   "bytes": 480796,
+   "path": "chess/chess_set_pieces_black_diff_1k.jpg",
+   "sha256": "74471018f96f197c963cc89e7dae19960b03bc2e4bf448e4b0beb51bfee5b85d"
+  },
+  {
+   "bytes": 590948,
+   "path": "chess/chess_set_pieces_white_diff_1k.jpg",
+   "sha256": "d9e06002509d73c3f343e1643f0c89ef84e24602f1f6858b5628e8f3e55ae77d"
+  },
+  {
+   "bytes": 2034320,
+   "path": "chess/geometry.bin",
+   "sha256": "e03b43185cd4c0526fe5cb1707be8bc78d848df580d9e3f7cc2bb60e85b5e71d"
+  },
+  {
+   "bytes": 29157,
+   "path": "chess/scene.json",
+   "sha256": "abdc2a1f842618e4be97950b2a72a3dc89bd26210fb89840774e36e465e65521"
+  }
+ ],
+ "label": "Re-implementation (2026), not the code used for the paper's experiments",
+ "scenes": [
+  {
+   "attribution_text": "Chess Set by Riley Queen, Poly Haven",
+   "attribution_url": "https://polyhaven.com/a/chess_set",
+   "id": "chess",
+   "licence": "CC0 1.0",
+   "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+   "path": "chess/scene.json",
+   "title": "Chess set"
+  },
+  {
+   "attribution_text": "Procedural blocks scene (part of this re-implementation)",
+   "attribution_url": null,
+   "id": "blocks",
+   "licence": "MIT",
+   "licence_url": null,
+   "path": "blocks/scene.json",
+   "title": "Blocks"
+  }
+ ]
+}

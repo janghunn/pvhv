@@ -1,0 +1,164 @@
+{
+  "comment": "Third-party scene models. Archives are fetched by fetch_models.py into models/cache/ and never committed. Paths in 'files[].path', 'extract_to', 'main_obj' and 'main_mtl' are relative to models/cache/.",
+  "models": [
+    {
+      "id": "sanmiguel",
+      "name": "San Miguel 2.0 (low-polygon real-time version)",
+      "quasar_reference": "San Miguel (QUASAR, Lu & Rowe, TOG 44(4) 2025, Sec. 4.1, Fig. 11)",
+      "source_page": "https://casual-effects.com/data/",
+      "licence": "CC-BY-3.0",
+      "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+      "copyright": "© Guillermo M. Leal Llaguno (Evolución Visual)",
+      "authors": [
+        "Guillermo M. Leal Llaguno (original model)",
+        "Morgan McGuire",
+        "Guedis Cardenas",
+        "Michael Mara",
+        "Nicholas Hull"
+      ],
+      "attribution": "San Miguel 2.0 © Guillermo M. Leal Llaguno (Evolución Visual); 2017 version by Morgan McGuire, Guedis Cardenas, Michael Mara and Nicholas Hull; from Morgan McGuire's Computer Graphics Archive (https://casual-effects.com/data); licensed CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/)",
+      "files": [
+        {
+          "url": "https://casual-effects.com/g3d/data10/research/model/San_Miguel/San_Miguel.zip",
+          "path": "downloads/San_Miguel.zip",
+          "sha256": "85874077735808150e679b3c71d70a37a270cb8833f4911325aa1099da3f7d4a",
+          "bytes": 535519642
+        }
+      ],
+      "extract_to": "sanmiguel",
+      "main_obj": "sanmiguel/San_Miguel/san-miguel-low-poly.obj",
+      "main_mtl": "sanmiguel/San_Miguel/san-miguel-low-poly.mtl",
+      "redistribution": "not redistributed here — fetched by script (the bundled license.txt states research and educational use with attribution)"
+    },
+    {
+      "id": "bistro",
+      "name": "Amazon Lumberyard Bistro (exterior)",
+      "quasar_reference": "Bistro (exterior), listed in the QUASAR repository's 3D asset credits",
+      "source_page": "https://casual-effects.com/data/",
+      "licence": "CC-BY-4.0",
+      "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+      "copyright": "© 2017 Amazon Lumberyard",
+      "authors": [
+        "Amazon Lumberyard",
+        "Morgan McGuire (remastered materials, archive version)"
+      ],
+      "attribution": "Amazon Lumberyard Bistro © 2017 Amazon Lumberyard; released in the NVIDIA ORCA collection (https://developer.nvidia.com/orca/amazon-lumberyard-bistro); via Morgan McGuire's Computer Graphics Archive; licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+      "files": [
+        {
+          "url": "https://casual-effects.com/g3d/data10/research/model/bistro/Exterior.zip",
+          "path": "downloads/Exterior.zip",
+          "sha256": "f612ba0d8a65811afe0d48a023d31e5b43ac40b78e9b12d15e2b7dc8923c29d4",
+          "bytes": 64186766
+        },
+        {
+          "url": "https://casual-effects.com/g3d/data10/research/model/bistro/BuildingTextures",
+          "path": "downloads/BuildingTextures.zip",
+          "sha256": "16538a37f34cadec5665d97e5b77ef3581d67ab674b33b9caeef1d277cbde6bf",
+          "bytes": 507671451
+        },
+        {
+          "url": "https://casual-effects.com/g3d/data10/research/model/bistro/OtherTextures",
+          "path": "downloads/OtherTextures.zip",
+          "sha256": "0806fee3eeb0e14cd501582edbd2d5caf33c5416a62a871e0f126391096f5c58",
+          "bytes": 431016313
+        },
+        {
+          "url": "https://casual-effects.com/g3d/data10/research/model/bistro/PropTextures",
+          "path": "downloads/PropTextures.zip",
+          "sha256": "a179e4ee6367d2b518c4978d7e2e690c59503861634d67d0da8bacfa7196571a",
+          "bytes": 415421476
+        }
+      ],
+      "extract_to": "bistro",
+      "main_obj": "bistro/Exterior/exterior.obj",
+      "main_mtl": "bistro/Exterior/exterior.mtl",
+      "redistribution": "allowed with attribution — not committed (size); fetched by script"
+    },
+    {
+      "id": "chess",
+      "name": "Chess Set (Poly Haven, 1k glTF)",
+      "quasar_reference": "none (licence-unambiguous CC0 model added alongside the QUASAR scenes)",
+      "source_page": "https://polyhaven.com/a/chess_set",
+      "licence": "CC0-1.0",
+      "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licence_note": "Poly Haven licence: https://polyhaven.com/license",
+      "copyright": "none (CC0 1.0 public domain dedication); author Riley Queen",
+      "authors": [
+        "Riley Queen"
+      ],
+      "attribution": "Chess Set by Riley Queen, Poly Haven (https://polyhaven.com/a/chess_set), CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)",
+      "format": "files",
+      "files": [
+        {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/chess_set/chess_set_1k.gltf",
+          "path": "chess/chess_set_1k.gltf",
+          "sha256": "3e21ecd0c2ffb703dfdb3f3ea7a379c1dbd4ec513ba2cb8e6cb1e5f276d7eb91",
+          "bytes": 53740
+        },
+        {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/chess_set/chess_set.bin",
+          "path": "chess/chess_set.bin",
+          "sha256": "c73476fd032a2cb4a9c256f70573eed260708132fdc42fec161c6216711560b3",
+          "bytes": 1732220
+        },
+        {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chess_set/chess_set_board_arm_1k.jpg",
+          "path": "chess/textures/chess_set_board_arm_1k.jpg",
+          "sha256": "67387308ce3a6424a1666e742c6556853344c01fbfcda8453b6e2e2f62bc6d30",
+          "bytes": 756404
+        },
+        {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chess_set/chess_set_board_diff_1k.jpg",
+          "path": "chess/textures/chess_set_board_diff_1k.jpg",
+          "sha256": "cca44d214f48ebe2205362a3996265d1fed727e094835bec2c873e91c653eaa5",
+          "bytes": 602985
+        },
+        {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chess_set/chess_set_board_nor_gl_1k.jpg",
+          "path": "chess/textures/chess_set_board_nor_gl_1k.jpg",
+          "sha256": "bc5657ec58e0e04a2e8fa6d50ec0f6e3009b1c22b8391ccdde1a4d5d9db30d4d",
+          "bytes": 227381
+        },
+        {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chess_set/chess_set_pieces_black_arm_1k.jpg",
+          "path": "chess/textures/chess_set_pieces_black_arm_1k.jpg",
+          "sha256": "e0413b36e970c645bd9b6192bfe788b318d9bd9f4f3746cf137552bfee118982",
+          "bytes": 833327
+        },
+        {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chess_set/chess_set_pieces_black_diff_1k.jpg",
+          "path": "chess/textures/chess_set_pieces_black_diff_1k.jpg",
+          "sha256": "74471018f96f197c963cc89e7dae19960b03bc2e4bf448e4b0beb51bfee5b85d",
+          "bytes": 480796
+        },
+        {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chess_set/chess_set_pieces_black_nor_gl_1k.jpg",
+          "path": "chess/textures/chess_set_pieces_black_nor_gl_1k.jpg",
+          "sha256": "b92343bba552e82f271f86def504e806e73c6f5dfc4469a90fa5b4f66013bfcd",
+          "bytes": 421230
+        },
+        {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chess_set/chess_set_pieces_white_arm_1k.jpg",
+          "path": "chess/textures/chess_set_pieces_white_arm_1k.jpg",
+          "sha256": "9604c461ee6d5d4f5937891b0468ff7efd354299074b139d04029b03c326e434",
+          "bytes": 841156
+        },
+        {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chess_set/chess_set_pieces_white_diff_1k.jpg",
+          "path": "chess/textures/chess_set_pieces_white_diff_1k.jpg",
+          "sha256": "d9e06002509d73c3f343e1643f0c89ef84e24602f1f6858b5628e8f3e55ae77d",
+          "bytes": 590948
+        },
+        {
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/chess_set/chess_set_pieces_white_nor_gl_1k.jpg",
+          "path": "chess/textures/chess_set_pieces_white_nor_gl_1k.jpg",
+          "sha256": "51c31dc44d1d0f01c10b759be7903bea9d5b04781b63dc45738dd70a6e31dd6c",
+          "bytes": 443642
+        }
+      ],
+      "extract_to": "chess",
+      "main_obj": "chess/chess_set_1k.gltf",
+      "redistribution": "allowed (CC0 1.0; attribution given as a courtesy) — not committed (size); fetched by script"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "sanmiguel",
+  "description": "San Miguel 2.0 (low-polygon real-time version), courtyard with tables, chairs, trees and arcades. Final figure camera.",
+  "camera": {"eye": [22.0, 1.7, 13.0], "target": [8.0, 2.0, 2.0], "up": [0.0, 1.0, 0.0],
+             "fovy": 50.0, "W": 960, "H": 540, "guard": 1.2},
+  "near": 0.5,
+  "far": 40.0,
+  "E": 0.15,
+  "cull_backfaces": false,
+  "samples": 14,
+  "background": [0.62, 0.74, 0.86],
+  "objects": [
+    {"model": "sanmiguel", "obj": "sanmiguel/San_Miguel/san-miguel-low-poly.obj",
+     "transform": [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]}
+  ]
+}

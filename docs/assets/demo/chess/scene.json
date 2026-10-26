@@ -1,0 +1,2006 @@
+{
+ "E": 0.07999999821186066,
+ "F": 671.7691453623979,
+ "H": 360,
+ "Hg": 432,
+ "W": 640,
+ "Wg": 768,
+ "attribution_text": "Chess Set by Riley Queen, Poly Haven",
+ "attribution_url": "https://polyhaven.com/a/chess_set",
+ "background": [
+  0.62,
+  0.74,
+  0.86
+ ],
+ "background_srgb8": [
+  206,
+  223,
+  239
+ ],
+ "basis": {
+  "back": [
+   0.5943859120617181,
+   0.3821052291825331,
+   0.7076022762639501
+  ],
+  "right": [
+   0.765704864789611,
+   0.0,
+   -0.6431920864232732
+  ],
+  "up": [
+   -0.24576705959115644,
+   0.9241188201910855,
+   -0.2925798328466148
+  ]
+ },
+ "batches": [
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 8928,
+   "index_type": "uint16",
+   "item": 1,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.20260828733444214,
+    0.017392655834555626,
+    -0.20260828733444214,
+    1.0
+   ],
+   "name": "piece_rook_white_01/ChessRook.003",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 64512,
+    "normals": 24192,
+    "positions": 0,
+    "uvs": 48384
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 2016
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 4920,
+   "index_type": "uint16",
+   "item": 2,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.20260828733444214,
+    0.017392655834555626,
+    -0.144720196723938,
+    1.0
+   ],
+   "name": "piece_pawn_white_01/Cylinder.002",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 115264,
+    "normals": 94704,
+    "positions": 82368,
+    "uvs": 107040
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 1028
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 438,
+   "index_type": "uint16",
+   "item": 3,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.08683212101459503,
+    0.017392655834555626,
+    -0.20260828733444214,
+    1.0
+   ],
+   "name": "piece_bishop_white_01/Cylinder.003_1",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 128304,
+    "normals": 126304,
+    "positions": 125104,
+    "uvs": 127504
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 100
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 8334,
+   "index_type": "uint16",
+   "item": 3,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.08683212101459503,
+    0.017392655834555626,
+    -0.20260828733444214,
+    1.0
+   ],
+   "name": "piece_bishop_white_01/Cylinder.003",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 184796,
+    "normals": 150036,
+    "positions": 129180,
+    "uvs": 170892
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 1738
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 8820,
+   "index_type": "uint16",
+   "item": 4,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.028944039717316628,
+    0.017392655834555626,
+    -0.20260828733444214,
+    1.0
+   ],
+   "name": "piece_queen_white/Cylinder.005",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 259928,
+    "normals": 223388,
+    "positions": 201464,
+    "uvs": 245312
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 1827
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 12516,
+   "index_type": "uint16",
+   "item": 5,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.028944039717316628,
+    0.017392655834555626,
+    -0.20260828733444214,
+    1.0
+   ],
+   "name": "piece_king_white/Cylinder.006",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 362144,
+    "normals": 309284,
+    "positions": 277568,
+    "uvs": 341000
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 2643
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 7986,
+   "index_type": "uint16",
+   "item": 6,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.144720196723938,
+    0.017392655834555626,
+    -0.20260828733444214,
+    1.0
+   ],
+   "name": "piece_knight_white_01/mesh.025",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 441736,
+    "normals": 407636,
+    "positions": 387176,
+    "uvs": 428096
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 1705
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 6624,
+   "index_type": "uint16",
+   "item": 7,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "name": "board/Cube.004",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 506540,
+    "normals": 476020,
+    "positions": 457708,
+    "uvs": 494332
+   },
+   "texture": "chess_set_board_diff_1k.jpg",
+   "vertex_count": 1526
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 7986,
+   "index_type": "uint16",
+   "item": 8,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.144720196723938,
+    0.017392655834555626,
+    -0.20260828733444214,
+    1.0
+   ],
+   "name": "piece_knight_white_02/mesh.006",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 574348,
+    "normals": 540248,
+    "positions": 519788,
+    "uvs": 560708
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 1705
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 8928,
+   "index_type": "uint16",
+   "item": 9,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.20260828733444214,
+    0.017392655834555626,
+    -0.20260828733444214,
+    1.0
+   ],
+   "name": "piece_rook_white_02/ChessRook.002",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 654832,
+    "normals": 614512,
+    "positions": 590320,
+    "uvs": 638704
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 2016
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 438,
+   "index_type": "uint16",
+   "item": 10,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.08683212101459503,
+    0.017392655834555626,
+    -0.20260828733444214,
+    1.0
+   ],
+   "name": "piece_bishop_white_02/Cylinder.001_1",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 675888,
+    "normals": 673888,
+    "positions": 672688,
+    "uvs": 675088
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 100
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 8334,
+   "index_type": "uint16",
+   "item": 10,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.08683212101459503,
+    0.017392655834555626,
+    -0.20260828733444214,
+    1.0
+   ],
+   "name": "piece_bishop_white_02/Cylinder.001",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 732380,
+    "normals": 697620,
+    "positions": 676764,
+    "uvs": 718476
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 1738
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 4920,
+   "index_type": "uint16",
+   "item": 11,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.144720196723938,
+    0.017392655834555626,
+    -0.144720196723938,
+    1.0
+   ],
+   "name": "piece_pawn_white_02/Cylinder.014",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 781944,
+    "normals": 761384,
+    "positions": 749048,
+    "uvs": 773720
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 1028
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 4920,
+   "index_type": "uint16",
+   "item": 12,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.08683212101459503,
+    0.017392655834555626,
+    -0.144720196723938,
+    1.0
+   ],
+   "name": "piece_pawn_white_03/Cylinder.015",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 824680,
+    "normals": 804120,
+    "positions": 791784,
+    "uvs": 816456
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 1028
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 4920,
+   "index_type": "uint16",
+   "item": 13,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.028944039717316628,
+    0.017392655834555626,
+    -0.144720196723938,
+    1.0
+   ],
+   "name": "piece_pawn_white_04/Cylinder.016",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 867416,
+    "normals": 846856,
+    "positions": 834520,
+    "uvs": 859192
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 1028
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 4920,
+   "index_type": "uint16",
+   "item": 14,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.028944039717316628,
+    0.017392655834555626,
+    -0.144720196723938,
+    1.0
+   ],
+   "name": "piece_pawn_white_05/Cylinder.017",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 910152,
+    "normals": 889592,
+    "positions": 877256,
+    "uvs": 901928
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 1028
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 4920,
+   "index_type": "uint16",
+   "item": 15,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.08683212101459503,
+    0.017392655834555626,
+    -0.144720196723938,
+    1.0
+   ],
+   "name": "piece_pawn_white_06/Cylinder.018",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 952888,
+    "normals": 932328,
+    "positions": 919992,
+    "uvs": 944664
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 1028
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 4920,
+   "index_type": "uint16",
+   "item": 16,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.144720196723938,
+    0.017392655834555626,
+    -0.144720196723938,
+    1.0
+   ],
+   "name": "piece_pawn_white_07/Cylinder.019",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 995624,
+    "normals": 975064,
+    "positions": 962728,
+    "uvs": 987400
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 1028
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 4920,
+   "index_type": "uint16",
+   "item": 17,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.20260828733444214,
+    0.017392655834555626,
+    -0.144720196723938,
+    1.0
+   ],
+   "name": "piece_pawn_white_08/Cylinder.020",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1038360,
+    "normals": 1017800,
+    "positions": 1005464,
+    "uvs": 1030136
+   },
+   "texture": "chess_set_pieces_white_diff_1k.jpg",
+   "vertex_count": 1028
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 8928,
+   "index_type": "uint16",
+   "item": 18,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.20260828733444214,
+    0.017392655834555626,
+    0.2018999457359314,
+    1.0
+   ],
+   "name": "piece_rook_black_01/ChessRook.007",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1112712,
+    "normals": 1072392,
+    "positions": 1048200,
+    "uvs": 1096584
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 2016
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 4920,
+   "index_type": "uint16",
+   "item": 19,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.20260828733444214,
+    0.017392655834555626,
+    0.14401185512542725,
+    1.0
+   ],
+   "name": "piece_pawn_black_01/Cylinder.021",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1163464,
+    "normals": 1142904,
+    "positions": 1130568,
+    "uvs": 1155240
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 1028
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 8334,
+   "index_type": "uint16",
+   "item": 20,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.08683212101459503,
+    0.017392655834555626,
+    0.2018999457359314,
+    1.0
+   ],
+   "name": "piece_bishop_black_01/Cylinder.022",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1228920,
+    "normals": 1194160,
+    "positions": 1173304,
+    "uvs": 1215016
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 1738
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 438,
+   "index_type": "uint16",
+   "item": 20,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.08683212101459503,
+    0.017392655834555626,
+    0.2018999457359314,
+    1.0
+   ],
+   "name": "piece_bishop_black_01/Cylinder.022_1",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1248788,
+    "normals": 1246788,
+    "positions": 1245588,
+    "uvs": 1247988
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 100
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 8820,
+   "index_type": "uint16",
+   "item": 21,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.028944039717316628,
+    0.017392655834555626,
+    0.2018999457359314,
+    1.0
+   ],
+   "name": "piece_queen_black/Cylinder.023",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1308128,
+    "normals": 1271588,
+    "positions": 1249664,
+    "uvs": 1293512
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 1827
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 12516,
+   "index_type": "uint16",
+   "item": 22,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.028944021090865135,
+    0.017392585054039955,
+    0.2026081383228302,
+    1.0
+   ],
+   "name": "piece_king_black/Cylinder.024",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1410344,
+    "normals": 1357484,
+    "positions": 1325768,
+    "uvs": 1389200
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 2643
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 7986,
+   "index_type": "uint16",
+   "item": 23,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.144720196723938,
+    0.017392655834555626,
+    0.2018999457359314,
+    1.0
+   ],
+   "name": "piece_knight_black_01/mesh.007",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1489936,
+    "normals": 1455836,
+    "positions": 1435376,
+    "uvs": 1476296
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 1705
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 7986,
+   "index_type": "uint16",
+   "item": 24,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.144720196723938,
+    0.017392655834555626,
+    0.2018999457359314,
+    1.0
+   ],
+   "name": "piece_knight_black_02/mesh.008",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1560468,
+    "normals": 1526368,
+    "positions": 1505908,
+    "uvs": 1546828
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 1705
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 8928,
+   "index_type": "uint16",
+   "item": 25,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.20260828733444214,
+    0.017392655834555626,
+    0.2018999457359314,
+    1.0
+   ],
+   "name": "piece_rook_black_02/ChessRook.008",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1640952,
+    "normals": 1600632,
+    "positions": 1576440,
+    "uvs": 1624824
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 2016
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 8334,
+   "index_type": "uint16",
+   "item": 26,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.08683212101459503,
+    0.017392655834555626,
+    0.2018999457359314,
+    1.0
+   ],
+   "name": "piece_bishop_black_02/Cylinder.025",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1714424,
+    "normals": 1679664,
+    "positions": 1658808,
+    "uvs": 1700520
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 1738
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 438,
+   "index_type": "uint16",
+   "item": 26,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.08683212101459503,
+    0.017392655834555626,
+    0.2018999457359314,
+    1.0
+   ],
+   "name": "piece_bishop_black_02/Cylinder.025_1",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1734292,
+    "normals": 1732292,
+    "positions": 1731092,
+    "uvs": 1733492
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 100
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 4920,
+   "index_type": "uint16",
+   "item": 27,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.144720196723938,
+    0.017392655834555626,
+    0.14401185512542725,
+    1.0
+   ],
+   "name": "piece_pawn_black_02/Cylinder.026",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1768064,
+    "normals": 1747504,
+    "positions": 1735168,
+    "uvs": 1759840
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 1028
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 4920,
+   "index_type": "uint16",
+   "item": 28,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.08683212101459503,
+    0.017392655834555626,
+    0.14401185512542725,
+    1.0
+   ],
+   "name": "piece_pawn_black_03/Cylinder.027",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1810800,
+    "normals": 1790240,
+    "positions": 1777904,
+    "uvs": 1802576
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 1028
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 4920,
+   "index_type": "uint16",
+   "item": 29,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    -0.028944039717316628,
+    0.017392655834555626,
+    0.14401185512542725,
+    1.0
+   ],
+   "name": "piece_pawn_black_04/Cylinder.028",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1853536,
+    "normals": 1832976,
+    "positions": 1820640,
+    "uvs": 1845312
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 1028
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 4920,
+   "index_type": "uint16",
+   "item": 30,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.028944039717316628,
+    0.017392655834555626,
+    0.14401185512542725,
+    1.0
+   ],
+   "name": "piece_pawn_black_05/Cylinder.029",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1896272,
+    "normals": 1875712,
+    "positions": 1863376,
+    "uvs": 1888048
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 1028
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 4920,
+   "index_type": "uint16",
+   "item": 31,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.08683212101459503,
+    0.017392655834555626,
+    0.14401185512542725,
+    1.0
+   ],
+   "name": "piece_pawn_black_06/Cylinder.030",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1939008,
+    "normals": 1918448,
+    "positions": 1906112,
+    "uvs": 1930784
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 1028
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 4920,
+   "index_type": "uint16",
+   "item": 32,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.144720196723938,
+    0.017392655834555626,
+    0.14401185512542725,
+    1.0
+   ],
+   "name": "piece_pawn_black_07/Cylinder.031",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 1981744,
+    "normals": 1961184,
+    "positions": 1948848,
+    "uvs": 1973520
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 1028
+  },
+  {
+   "alpha_test": false,
+   "base_color": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "index_count": 4920,
+   "index_type": "uint16",
+   "item": 33,
+   "model": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.20260828733444214,
+    0.017392655834555626,
+    0.14401185512542725,
+    1.0
+   ],
+   "name": "piece_pawn_black_08/Cylinder.032",
+   "normal_matrix": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   "offsets": {
+    "indices": 2024480,
+    "normals": 2003920,
+    "positions": 1991584,
+    "uvs": 2016256
+   },
+   "texture": "chess_set_pieces_black_diff_1k.jpg",
+   "vertex_count": 1028
+  }
+ ],
+ "cull_backfaces": true,
+ "delta": 0.0020000000949949026,
+ "eps": 0.0005000000237487257,
+ "eye": [
+  0.42,
+  0.3,
+  0.5
+ ],
+ "far": 2.0,
+ "fovy": 30.0,
+ "geometry_bytes": 2034320,
+ "guard": 1.2,
+ "id": "chess",
+ "items": 33,
+ "label": "Re-implementation (2026), not the code used for the paper's experiments",
+ "licence": "CC0 1.0",
+ "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+ "margin": 1.5,
+ "nSamples": 14,
+ "near": 0.05000000074505806,
+ "ox": 64,
+ "oy": 36,
+ "probes": [
+  -0.37796446681022644,
+  0.6546536684036255,
+  -0.26726123690605164,
+  -0.4629100561141968,
+  0.7092193365097046,
+  0.5951057076454163,
+  -0.35517042875289917,
+  0.1292714625597,
+  0.146759495139122,
+  -0.8323144912719727,
+  0.1136794164776802,
+  0.6447080373764038,
+  -0.9396926164627075,
+  -0.3420201539993286,
+  0.2047339826822281,
+  -0.17179220914840698,
+  0.7801715135574341,
+  0.1849040538072586,
+  -0.41010782122612,
+  0.43468889594078064,
+  -0.27637049555778503,
+  -0.9231417775154114,
+  0.27643072605133057,
+  0.37131088972091675,
+  -0.880411684513092,
+  0.10290537029504776,
+  0.2800706923007965,
+  -0.649276852607727
+ ],
+ "proj_ref": [
+  2.099278688430786,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  3.732050895690918,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  -1.0512820482254028,
+  -1.0,
+  0.0,
+  0.0,
+  -0.10256410390138626,
+  0.0
+ ],
+ "proj_src": [
+  1.7493988275527954,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  3.1100423336029053,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  -1.0512820482254028,
+  -1.0,
+  0.0,
+  0.0,
+  -0.10256410390138626,
+  0.0
+ ],
+ "target": [
+  0.0,
+  0.03,
+  0.0
+ ],
+ "textures": [
+  {
+   "file": "chess_set_board_diff_1k.jpg",
+   "height": 1024,
+   "width": 1024
+  },
+  {
+   "file": "chess_set_pieces_black_diff_1k.jpg",
+   "height": 1024,
+   "width": 1024
+  },
+  {
+   "file": "chess_set_pieces_white_diff_1k.jpg",
+   "height": 1024,
+   "width": 1024
+  }
+ ],
+ "title": "Chess set",
+ "triangles": 76920,
+ "up_config": [
+  0.0,
+  1.0,
+  0.0
+ ],
+ "version": 1,
+ "view0": [
+  0.765704870223999,
+  -0.24576705694198608,
+  0.5943859219551086,
+  0.0,
+  0.0,
+  0.9241188168525696,
+  0.3821052312850952,
+  0.0,
+  -0.6431921124458313,
+  -0.2925798296928406,
+  0.7076022624969482,
+  0.0,
+  0.0,
+  -0.027723563835024834,
+  -0.7180747985839844,
+  1.0
+ ],
+ "view_tE": [
+  0.765704870223999,
+  -0.24576705694198608,
+  0.5943859219551086,
+  0.0,
+  0.0,
+  0.9241188168525696,
+  0.3821052312850952,
+  0.0,
+  -0.6431921124458313,
+  -0.2925798296928406,
+  0.7076022624969482,
+  0.0,
+  -0.07999999821186066,
+  -0.027723563835024834,
+  -0.7180747985839844,
+  1.0
+ ]
+}

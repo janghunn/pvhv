@@ -1,0 +1,16 @@
+{
+  "name": "chess",
+  "description": "Poly Haven chess_set (CC0, Riley Queen), 1k glTF; one item per piece/board node. Final figure camera.",
+  "camera": {"eye": [0.42, 0.30, 0.50], "target": [0.0, 0.03, 0.0], "up": [0.0, 1.0, 0.0],
+             "fovy": 30.0, "W": 960, "H": 540, "guard": 1.2},
+  "near": 0.05,
+  "far": 2.0,
+  "E": 0.08,
+  "cull_backfaces": true,
+  "samples": 14,
+  "background": [0.62, 0.74, 0.86],
+  "objects": [
+    {"model": "chess", "gltf": "chess/chess_set_1k.gltf",
+     "transform": [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]}
+  ]
+}
