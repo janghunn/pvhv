@@ -2,6 +2,7 @@
 """Check the static page and integration contracts using only the standard library."""
 
 import argparse
+import colorsys
 import difflib
 from html import unescape
 from html.parser import HTMLParser
@@ -23,6 +24,10 @@ ATTRIBUTION_HOSTS = {"polyhaven.com", "creativecommons.org", "casual-effects.com
 JS_ATTRIBUTION_URLS = {"https://polyhaven.com/a/chess_set", "https://creativecommons.org/publicdomain/zero/1.0/"}
 TEXT_SUFFIXES = {".html", ".css", ".js", ".mjs", ".json", ".md", ".svg", ".txt"}
 REIMPLEMENTATION_LABEL = "Re-implementation (2026), not the code used for the paper's experiments."
+METHOD_PROVENANCE = ("Diagrams drawn for this page after Figs. 2 and 3 and Sec. 4 of the paper "
+                     "(Kim and Lee, ACM TOG 42(4), 2023); schematic, not to scale.")
+MIN_PANEL_PX = 300   # narrowest method panel the auto-fit grid produces (minmax(300px, 1fr))
+MIN_LABEL_PX = 11
 VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
 
 
@@ -140,7 +145,14 @@ def check_navigation(page, facts):
     require(len(nav) == 1, "expected one section navigation")
     equal([node.text().strip() for node in nav[0].descendants() if node.tag == "a"],
           ["Overview", "Method", "Demo", "Results", "BibTeX"], "section navigation")
-    return "exact Paper/PDF/Code/BibTeX resources and Overview/Method/Demo/Results/BibTeX navigation"
+    menu = page.by_id("menu-toggle")
+    require(menu.tag == "button" and menu.attrs.get("type") == "button" and "hidden" in menu.attrs
+            and menu.attrs.get("aria-expanded") == "false" and menu.attrs.get("aria-controls") == "section-nav",
+            "menu toggle must be a hidden button[aria-expanded=false][aria-controls=section-nav] until JS enables it")
+    require(nav[0].attrs.get("id") == "section-nav" and "hidden" not in nav[0].attrs,
+            "section links must stay visible without JavaScript")
+    return ("exact Paper/PDF/Code/BibTeX resources and Overview/Method/Demo/Results/BibTeX navigation; "
+            "Menu is progressive (links visible without JS)")
 
 
 def metadata_text(value):
@@ -230,8 +242,10 @@ def check_slots(page):
         name = slot.attrs["data-slot"]
         src, aspect = slot.attrs.get("data-src"), slot.attrs.get("data-aspect")
         require(src and aspect, f"{name}: missing data-src/data-aspect")
-        equal(rows[name][1], "docs/" + src, f"{name} expected file")
-        equal(rows[name][2], aspect, f"{name} aspect")
+        sources, aspects = src.split(), aspect.split()
+        require(len(sources) == len(aspects), f"{name}: data-src and data-aspect list lengths differ")
+        equal(rows[name][1], ", ".join("docs/" + item for item in sources), f"{name} expected file")
+        equal(rows[name][2], ", ".join(aspects), f"{name} aspect")
         descendants = list(slot.descendants())
         if name != "demo":
             captions = [node for node in descendants if node.tag == "figcaption"]
@@ -300,16 +314,68 @@ def check_slots_filled(page):
             "slot-box outside #demo-root")
     for figure in (node for node in page.nodes() if node.tag == "figure" and "data-slot" in node.attrs):
         name = figure.attrs["data-slot"]
+        sources, aspects = figure.attrs.get("data-src", "").split(), figure.attrs.get("data-aspect", "").split()
         images = [node for node in figure.descendants() if node.tag == "img"]
-        require(len(images) == 1, f"{name}: expected one image")
-        image = images[0]
-        equal(image.attrs.get("src"), figure.attrs.get("data-src"), f"{name} image source")
-        path = (DOCS / image.attrs["src"]).resolve()
-        require(path.is_relative_to(DOCS) and path.is_file(), f"{name}: missing or nonlocal image")
-        dimensions = image_size(path)
-        actual = tuple(int(image.attrs.get(key, "0")) for key in ("width", "height"))
-        equal(actual, dimensions, f"{name} image dimensions")
-    return "all figure images exist with exact dimensions; only the runtime demo placeholder remains"
+        equal([image.attrs.get("src") for image in images], sources, f"{name} image sources (in order)")
+        for image, aspect in zip(images, aspects):
+            path = (DOCS / image.attrs["src"]).resolve()
+            require(path.is_relative_to(DOCS) and path.is_file(), f"{name}: missing or nonlocal image")
+            dimensions = image_size(path)
+            actual = tuple(int(image.attrs.get(key, "0")) for key in ("width", "height"))
+            equal(actual, dimensions, f"{name} image dimensions")
+            ratio = tuple(int(part) for part in aspect.split(":"))
+            require(ratio[0] * dimensions[1] == ratio[1] * dimensions[0],
+                    f"{name}: aspect {aspect} does not match {dimensions[0]}x{dimensions[1]}")
+    return ("all figure images exist in data-src order with exact dimensions and declared aspects; "
+            "only the runtime demo placeholder remains")
+
+
+def svg_label_sizes(path):
+    """Effective font sizes (viewBox units) of every text run, and the viewBox width."""
+    root = ET.fromstring(path.read_bytes())
+    width = float(root.attrib["viewBox"].split()[2])
+    sizes = []
+
+    def walk(node, inherited):
+        size = node.attrib.get("font-size")
+        match = re.search(r"font-size\s*:\s*([\d.]+)", node.attrib.get("style", ""))
+        size = float(match.group(1)) if match else float(size) if size else inherited
+        tag = node.tag.rsplit("}", 1)[-1]
+        if tag in {"text", "tspan"} and (node.text or "").strip():
+            sizes.append(size)
+        for child in node:
+            walk(child, size)
+            if tag in {"text", "tspan"} and (child.tail or "").strip():
+                sizes.append(size)
+    walk(root, 16.0)
+    return sizes, width
+
+
+def check_method_figure(page):
+    figure = next(node for node in page.nodes() if node.attrs.get("data-slot") == "method-overview")
+    sources = figure.attrs["data-src"].split()
+    require(len(sources) == 3 and all(re.fullmatch(r"assets/img/method-[\w-]+\.svg", src) for src in sources),
+            "method-overview must hold three local method-*.svg panels")
+    require(not (DOCS / "assets/img/method-overview.svg").exists(), "superseded method-overview.svg still present")
+    caps = [node.text().strip() for node in figure.descendants() if node.has_class("panel-cap")]
+    require(len(caps) == 3 and [cap[:3] for cap in caps] == ["(a)", "(b)", "(c)"],
+            "method panels need sub-captions (a), (b), (c)")
+    caption = collapse(next(node for node in figure.descendants() if node.tag == "figcaption").text())
+    require(caption.endswith(METHOD_PROVENANCE), "method caption must end with the provenance sentence")
+    smallest = []
+    for src in sources:
+        path = DOCS / src
+        root = ET.fromstring(path.read_bytes())
+        names = {child.tag.rsplit("}", 1)[-1] for child in root}
+        require({"title", "desc"} <= names, f"{path.name}: needs <title> and <desc>")
+        sizes, width = svg_label_sizes(path)
+        require(sizes, f"{path.name}: no text found")
+        px = min(sizes) * MIN_PANEL_PX / width
+        print(f"{'OK' if px >= MIN_LABEL_PX else 'FAIL'} method-label.{path.name}: smallest text {min(sizes):g}/{width:g} "
+              f"viewBox units = {px:.2f} CSS px at a {MIN_PANEL_PX} px panel (minimum {MIN_LABEL_PX})")
+        smallest.append(px)
+    require(min(smallest) >= MIN_LABEL_PX, "method label below the legibility minimum")
+    return "three titled panels with (a)-(c) sub-captions, provenance, and every label legible at a 300 px panel"
 
 
 def check_captions(page, source):
@@ -428,8 +494,9 @@ def luminance(value):
 
 def check_contrast():
     tokens = dict(re.findall(r"--([\w-]+)\s*:\s*#([0-9a-fA-F]{3,6})\b", (DOCS / "assets/css/tokens.css").read_text()))
-    pairs = [(fg, bg, 4.5) for fg in ("ink", "muted", "accent") for bg in ("bg", "surface", "note-tint")]
-    pairs += [("accent-ink", "accent", 4.5), ("control", "surface", 3.0)]
+    pairs = [(fg, bg, 4.5) for fg in ("ink", "muted", "accent") for bg in ("bg", "surface", "tint")]
+    pairs += [("accent-ink", "accent", 4.5), ("control", "surface", 3.0), ("control", "bg", 3.0),
+              ("paint", "bg", 3.0), ("paint", "surface", 3.0)]
     # Slot labels use ink/muted on surface, and their stripe also uses the checked bg.
     failures = []
     for fg, bg, minimum in pairs:
@@ -439,7 +506,11 @@ def check_contrast():
         if ratio < minimum:
             failures.append(f"{fg}/{bg}")
     require(not failures, "contrast below threshold: " + ", ".join(failures))
-    return "all text pairs including slot labels meet AA; control border meets 3:1"
+    red, green, blue = (int(tokens["accent"][index:index + 2], 16) / 255 for index in (0, 2, 4))
+    hue = colorsys.rgb_to_hls(red, green, blue)[0] * 360
+    print(f"{'OK' if 90 <= hue <= 170 else 'FAIL'} accent-hue: {hue:.1f} degrees (green: 90-170)")
+    require(90 <= hue <= 170, f"accent hue {hue:.1f} is not green")
+    return "all text pairs including slot labels meet AA; control borders and focus ring meet 3:1; accent is green"
 
 
 def check_leftovers():
@@ -476,6 +547,7 @@ def main():
         ("slots", lambda: check_slots(page)),
         ("slots-filled", lambda: check_slots_filled(page)),
         ("captions", lambda: check_captions(page, source)),
+        ("method-figure", lambda: check_method_figure(page)),
         ("a11y", lambda: check_a11y(page)),
         ("external-resources", check_resources),
         ("forbidden-references", check_forbidden_references),

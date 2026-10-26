@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 320" role="img" aria-labelledby="title desc">
+  <title id="title">Effective Depth Peeling keeps hidden fragments inside PVHVs and culls the rest</title>
+  <desc id="desc">Cross-section after Sec. 4.1 and Fig. 7 of the paper. Behind a foreground layer (h = 0) with edge f, the first hidden layer (h = 1) is split into fragments. Baseline depth peeling (BDP) keeps every fragment (grey). Effective Depth Peeling (EDP) keeps the fragments inside the PVHV between the edge rays from s and n (green) and culls the others (dashed orange).</desc>
+  <rect width="360" height="320" fill="#ffffff"/>
+  <g font-family="Lato, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="17">
+    <path d="M150 150L77.7 22L250.2 22Z" fill="#18794e" fill-opacity=".2"/>
+    <path d="M176 196L77.7 22" stroke="#17231c" stroke-width="2.4"/>
+    <path d="M114 196L250.2 22" stroke="#0072b2" stroke-width="2" stroke-dasharray="7 4"/>
+    <path d="M8 58H98" stroke="#52625a" stroke-width="3"/>
+    <path d="M98 58H352" stroke="#52625a" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <text x="8" y="46" text-anchor="start" font-size="15" fill="#52625a">visible</text>
+    <rect x="150" y="145" width="202" height="10" fill="#dfe6e0" stroke="#17231c" stroke-width="1.6"/>
+    <circle cx="150" cy="150" r="4.5" fill="#fff" stroke="#17231c" stroke-width="1.6"/>
+    <text x="141" y="155" text-anchor="end" font-size="17" fill="#17231c"><tspan font-style="italic">f</tspan></text>
+    <text x="352" y="174" text-anchor="end" font-size="15" fill="#17231c">foreground, <tspan font-style="italic">h</tspan> = 0</text>
+    <text x="352" y="44" text-anchor="end" font-size="15" fill="#17231c" stroke="#ffffff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">hidden layer, <tspan font-style="italic">h</tspan> = 1</text>
+    <text x="214" y="116" text-anchor="middle" font-size="15" fill="#18794e" font-weight="700" stroke="#ffffff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">PVHV</text>
+    <circle cx="114" cy="196" r="14" fill="#e6f1f8" stroke="#0072b2" stroke-width="2"/><text x="114" y="202" text-anchor="middle" font-size="17" fill="#0072b2"><tspan font-style="italic">n</tspan></text>
+    <circle cx="176" cy="196" r="14" fill="#ffffff" stroke="#17231c" stroke-width="2"/><text x="176" y="202" text-anchor="middle" font-size="17" fill="#17231c"><tspan font-style="italic">s</tspan></text>
+    <rect x="100" y="51.5" width="13" height="13" rx="2" fill="#18794e"/>
+    <rect x="116.5" y="51.5" width="13" height="13" rx="2" fill="#18794e"/>
+    <rect x="133" y="51.5" width="13" height="13" rx="2" fill="#18794e"/>
+    <rect x="149.5" y="51.5" width="13" height="13" rx="2" fill="#18794e"/>
+    <rect x="166" y="51.5" width="13" height="13" rx="2" fill="#18794e"/>
+    <rect x="182.5" y="51.5" width="13" height="13" rx="2" fill="#18794e"/>
+    <rect x="199" y="51.5" width="13" height="13" rx="2" fill="#18794e"/>
+    <rect x="216.5" y="52.5" width="11" height="11" rx="2" fill="#e69f00" fill-opacity=".28" stroke="#d55e00" stroke-width="2" stroke-dasharray="3 2"/>
+    <rect x="233" y="52.5" width="11" height="11" rx="2" fill="#e69f00" fill-opacity=".28" stroke="#d55e00" stroke-width="2" stroke-dasharray="3 2"/>
+    <rect x="249.5" y="52.5" width="11" height="11" rx="2" fill="#e69f00" fill-opacity=".28" stroke="#d55e00" stroke-width="2" stroke-dasharray="3 2"/>
+    <rect x="266" y="52.5" width="11" height="11" rx="2" fill="#e69f00" fill-opacity=".28" stroke="#d55e00" stroke-width="2" stroke-dasharray="3 2"/>
+    <rect x="282.5" y="52.5" width="11" height="11" rx="2" fill="#e69f00" fill-opacity=".28" stroke="#d55e00" stroke-width="2" stroke-dasharray="3 2"/>
+    <rect x="299" y="52.5" width="11" height="11" rx="2" fill="#e69f00" fill-opacity=".28" stroke="#d55e00" stroke-width="2" stroke-dasharray="3 2"/>
+    <rect x="315.5" y="52.5" width="11" height="11" rx="2" fill="#e69f00" fill-opacity=".28" stroke="#d55e00" stroke-width="2" stroke-dasharray="3 2"/>
+    <rect x="332" y="52.5" width="11" height="11" rx="2" fill="#e69f00" fill-opacity=".28" stroke="#d55e00" stroke-width="2" stroke-dasharray="3 2"/>
+    <text x="8" y="253" text-anchor="start" font-size="15" fill="#17231c" font-weight="700">BDP</text>
+    <rect x="100" y="242" width="13" height="13" rx="2" fill="#52625a"/>
+    <rect x="116.5" y="242" width="13" height="13" rx="2" fill="#52625a"/>
+    <rect x="133" y="242" width="13" height="13" rx="2" fill="#52625a"/>
+    <rect x="149.5" y="242" width="13" height="13" rx="2" fill="#52625a"/>
+    <rect x="166" y="242" width="13" height="13" rx="2" fill="#52625a"/>
+    <rect x="182.5" y="242" width="13" height="13" rx="2" fill="#52625a"/>
+    <rect x="199" y="242" width="13" height="13" rx="2" fill="#52625a"/>
+    <rect x="215.5" y="242" width="13" height="13" rx="2" fill="#52625a"/>
+    <rect x="232" y="242" width="13" height="13" rx="2" fill="#52625a"/>
+    <rect x="248.5" y="242" width="13" height="13" rx="2" fill="#52625a"/>
+    <rect x="265" y="242" width="13" height="13" rx="2" fill="#52625a"/>
+    <rect x="281.5" y="242" width="13" height="13" rx="2" fill="#52625a"/>
+    <rect x="298" y="242" width="13" height="13" rx="2" fill="#52625a"/>
+    <rect x="314.5" y="242" width="13" height="13" rx="2" fill="#52625a"/>
+    <rect x="331" y="242" width="13" height="13" rx="2" fill="#52625a"/>
+    <text x="8" y="279" text-anchor="start" font-size="15" fill="#17231c" font-weight="700">EDP</text>
+    <rect x="100" y="268" width="13" height="13" rx="2" fill="#18794e"/>
+    <rect x="116.5" y="268" width="13" height="13" rx="2" fill="#18794e"/>
+    <rect x="133" y="268" width="13" height="13" rx="2" fill="#18794e"/>
+    <rect x="149.5" y="268" width="13" height="13" rx="2" fill="#18794e"/>
+    <rect x="166" y="268" width="13" height="13" rx="2" fill="#18794e"/>
+    <rect x="182.5" y="268" width="13" height="13" rx="2" fill="#18794e"/>
+    <rect x="199" y="268" width="13" height="13" rx="2" fill="#18794e"/>
+    <rect x="216.5" y="269" width="11" height="11" rx="2" fill="#e69f00" fill-opacity=".28" stroke="#d55e00" stroke-width="2" stroke-dasharray="3 2"/>
+    <rect x="233" y="269" width="11" height="11" rx="2" fill="#e69f00" fill-opacity=".28" stroke="#d55e00" stroke-width="2" stroke-dasharray="3 2"/>
+    <rect x="249.5" y="269" width="11" height="11" rx="2" fill="#e69f00" fill-opacity=".28" stroke="#d55e00" stroke-width="2" stroke-dasharray="3 2"/>
+    <rect x="266" y="269" width="11" height="11" rx="2" fill="#e69f00" fill-opacity=".28" stroke="#d55e00" stroke-width="2" stroke-dasharray="3 2"/>
+    <rect x="282.5" y="269" width="11" height="11" rx="2" fill="#e69f00" fill-opacity=".28" stroke="#d55e00" stroke-width="2" stroke-dasharray="3 2"/>
+    <rect x="299" y="269" width="11" height="11" rx="2" fill="#e69f00" fill-opacity=".28" stroke="#d55e00" stroke-width="2" stroke-dasharray="3 2"/>
+    <rect x="315.5" y="269" width="11" height="11" rx="2" fill="#e69f00" fill-opacity=".28" stroke="#d55e00" stroke-width="2" stroke-dasharray="3 2"/>
+    <rect x="332" y="269" width="11" height="11" rx="2" fill="#e69f00" fill-opacity=".28" stroke="#d55e00" stroke-width="2" stroke-dasharray="3 2"/>
+    <text x="96" y="230" text-anchor="start" font-size="15" fill="#52625a">fragments of <tspan font-style="italic">h</tspan> = 1</text>
+    <rect x="8" y="296" width="13" height="13" rx="2" fill="#18794e"/>
+    <text x="27" y="308" text-anchor="start" font-size="15" fill="#17231c">kept</text>
+    <rect x="77" y="297" width="11" height="11" rx="2" fill="#e69f00" fill-opacity=".28" stroke="#d55e00" stroke-width="2" stroke-dasharray="3 2"/>
+    <text x="95" y="308" text-anchor="start" font-size="15" fill="#17231c">culled (EDP)</text>
+    <rect x="200" y="296" width="13" height="13" rx="2" fill="#52625a"/>
+    <text x="219" y="308" text-anchor="start" font-size="15" fill="#17231c">kept by BDP</text>
+  </g>
+</svg>

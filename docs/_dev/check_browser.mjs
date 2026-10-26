@@ -18,6 +18,8 @@ const GL_FLAGS = {
   gpu: ['--use-gl=angle', '--use-angle=gl-egl'],
 };
 const TAB_BUDGET = 180;
+const MIN_LABEL_PX = 11;
+const MIN_TEXT_CONTRAST = 4.5;
 for (let i = 0; i < args.length; i += 1) {
   if (args[i] === '--out' && args[i + 1]) output = path.resolve(args[++i]);
   else if (args[i] === '--chrome' && args[i + 1]) chromePath = args[++i];
@@ -225,6 +227,14 @@ async function checkWidth(origin, width, height) {
         windowsVirtualKeyCode: code, nativeVirtualKeyCode: code });
     }
   };
+  const press = async (name, code) => {
+    // Enter needs its text so Chrome activates the focused button.
+    const text = name === 'Enter' ? { text: '\r', unmodifiedText: '\r' } : {};
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: name, code: name,
+      windowsVirtualKeyCode: code, nativeVirtualKeyCode: code, ...text });
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', key: name, code: name,
+      windowsVirtualKeyCode: code, nativeVirtualKeyCode: code });
+  };
   const tabFromTop = async identity => {
     // Reset both DOM focus and Chrome's sequential-navigation starting point.
     await evaluate(`window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -359,6 +369,123 @@ async function checkWidth(origin, width, height) {
     }
 
     try {
+      // Method panels: smallest SVG text run at its rendered size (font-size x rendered width / viewBox width).
+      result.methodLabels = await evaluate(`(async () => {
+        const panels = [...document.querySelectorAll('[data-slot="method-overview"] img')];
+        return Promise.all(panels.map(async image => {
+          const source = await (await fetch(image.getAttribute('src'))).text();
+          const svg = new DOMParser().parseFromString(source, 'image/svg+xml').documentElement;
+          const viewBoxWidth = Number(svg.getAttribute('viewBox').split(/\\s+/)[2]);
+          const sizes = [];
+          const walk = (node, inherited) => {
+            const size = Number(node.getAttribute('font-size') || inherited);
+            const own = [...node.childNodes].some(child => child.nodeType === 3 && child.textContent.trim());
+            if (['text', 'tspan'].includes(node.localName) && own) sizes.push(size);
+            for (const child of node.children) walk(child, size);
+          };
+          walk(svg, 16);
+          const minUnits = Math.min(...sizes);
+          return { src: image.getAttribute('src'), renderedWidth: image.clientWidth, viewBoxWidth, minUnits,
+            textRuns: sizes.length, minLabelPx: Math.round(minUnits * image.clientWidth / viewBoxWidth * 100) / 100 };
+        }));
+      })()`);
+      if (result.methodLabels.length !== 3) result.failures.push(`Expected 3 method panels, found ${result.methodLabels.length}`);
+      for (const panel of result.methodLabels) {
+        if (!(panel.textRuns > 0) || !(panel.minLabelPx >= MIN_LABEL_PX)) {
+          result.failures.push(`Method label below ${MIN_LABEL_PX}px: ${panel.src} ${panel.minLabelPx}px`);
+        }
+      }
+    } catch (error) {
+      result.failures.push(`Method labels: ${error.message}`);
+    }
+
+    try {
+      // Rendered colours: foreground against the nearest opaque background, as the browser computed them.
+      result.contrast = await evaluate(`(() => {
+        const rgb = value => (value.match(/[\\d.]+/g) || []).map(Number);
+        const background = element => {
+          for (let node = element; node; node = node.parentElement) {
+            const colour = rgb(getComputedStyle(node).backgroundColor);
+            if (colour.length >= 3 && (colour.length === 3 || colour[3] > 0)) return colour.slice(0, 3);
+          }
+          return [255, 255, 255];
+        };
+        const luminance = colour => colour.map(channel => channel / 255)
+          .map(channel => channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4)
+          .reduce((sum, channel, index) => sum + channel * [.2126, .7152, .0722][index], 0);
+        const ratio = (a, b) => {
+          const [dark, light] = [luminance(a), luminance(b)].sort((x, y) => x - y);
+          return Math.round((light + .05) / (dark + .05) * 100) / 100;
+        };
+        const samples = {
+          body: 'body', authors: '#authors', affiliation: '#affiliation', venue: '#venue',
+          navLink: '#section-nav a', menu: '#menu-toggle', primaryButton: '.btn.primary', button: '.btns .btn:not(.primary)',
+          band: '.band p', cardText: '#abstract-text', panelCaption: '.panel-cap', figureCaption: '#overview figcaption',
+          methodCaption: '.method-fig figcaption', link: '#reimplementation a', noteText: '#reimplementation p',
+          citation: '#citation', copyButton: '#copy', footer: 'footer p'
+        };
+        return Object.entries(samples).map(([name, selector]) => {
+          const element = document.querySelector(selector);
+          if (!element || !element.getClientRects().length) return { name, selector, hidden: true };
+          const style = getComputedStyle(element);
+          const foreground = rgb(style.color).slice(0, 3);
+          const back = background(element);
+          return { name, selector, color: style.color, background: 'rgb(' + back.join(', ') + ')', ratio: ratio(foreground, back) };
+        });
+      })()`);
+      for (const pair of result.contrast) {
+        if (!pair.hidden && !(pair.ratio >= MIN_TEXT_CONTRAST)) {
+          result.failures.push(`Computed contrast ${pair.name} ${pair.ratio}:1 < ${MIN_TEXT_CONTRAST}:1`);
+        }
+      }
+      if (!result.contrast.some(pair => pair.name === 'body' && !pair.hidden)) result.failures.push('Body contrast not measured');
+    } catch (error) {
+      result.failures.push(`Contrast: ${error.message}`);
+    }
+
+    try {
+      const navState = `(() => {
+        const menu = document.getElementById('menu-toggle'), nav = document.getElementById('section-nav');
+        const active = document.activeElement;
+        return { menuVisible: Boolean(menu.getClientRects().length), expanded: menu.getAttribute('aria-expanded'),
+          linksVisible: [...nav.querySelectorAll('a')].filter(a => a.getClientRects().length).length,
+          focus: active === menu ? 'menu' : nav.contains(active) ? 'link:' + active.textContent.trim() : active.tagName.toLowerCase() };
+      })()`;
+      const steps = [];
+      const record = async label => { const state = await evaluate(navState); steps.push({ step: label, ...state }); return state; };
+      const initial = await record('load');
+      if (width > 819) {
+        if (initial.menuVisible || initial.linksVisible !== 5) result.failures.push('Desktop navigation must show 5 links and no Menu button');
+      } else {
+        const expect = (state, wanted, label) => {
+          for (const [field, value] of Object.entries(wanted)) {
+            if (state[field] !== value) result.failures.push(`Menu ${label}: ${field} = ${state[field]}, expected ${value}`);
+          }
+        };
+        expect(initial, { menuVisible: true, expanded: 'false', linksVisible: 0 }, 'on load');
+        await evaluate("document.getElementById('menu-toggle').focus(); true");
+        await press('Enter', 13);
+        expect(await record('Enter'), { expanded: 'true', linksVisible: 5, focus: 'menu' }, 'after Enter');
+        await press('Escape', 27);
+        expect(await record('Escape'), { expanded: 'false', linksVisible: 0, focus: 'menu' }, 'after Escape');
+        await press('ArrowDown', 40);
+        expect(await record('ArrowDown'), { expanded: 'true', linksVisible: 5, focus: 'link:Overview' }, 'after ArrowDown');
+        await press('ArrowDown', 40);
+        expect(await record('ArrowDown 2'), { focus: 'link:Method' }, 'after second ArrowDown');
+        await press('Escape', 27);
+        expect(await record('Escape 2'), { expanded: 'false', linksVisible: 0, focus: 'menu' }, 'after Escape from a link');
+        await press('Enter', 13);
+        await evaluate("document.querySelector('#section-nav a[href=\"#method\"]').click(); true");
+        const chosen = await record('select Method');
+        expect(chosen, { expanded: 'false', linksVisible: 0 }, 'after choosing a section');
+        if (await evaluate('location.hash') !== '#method') result.failures.push('Choosing Method did not navigate to #method');
+      }
+      result.menu = steps;
+    } catch (error) {
+      result.failures.push(`Menu: ${error.message}`);
+    }
+
+    try {
       result.tabsToCopy = await tabFromTop("document.activeElement.id === 'copy'");
       result.copyReachable = Boolean(result.tabsToCopy);
       if (!result.copyReachable) result.failures.push(`Copy button unreachable within ${TAB_BUDGET} Tab presses`);
@@ -414,6 +541,41 @@ async function checkWidth(origin, width, height) {
   return result;
 }
 
+async function checkNoScript(origin) {
+  // Without JavaScript the phone layout must still offer every section link (the Menu stays hidden).
+  const result = { width: 390, failures: [] };
+  const { targetId } = await cdp.send('Target.createTarget', { url: 'about:blank' });
+  const { sessionId } = await cdp.send('Target.attachToTarget', { targetId, flatten: true });
+  const send = (method, params = {}, milliseconds) => cdp.send(method, params, sessionId, milliseconds);
+  let loaded = false;
+  const listen = event => { if (event.sessionId === sessionId && event.method === 'Page.loadEventFired') loaded = true; };
+  cdp.listeners.add(listen);
+  try {
+    await send('Page.enable');
+    await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+    await send('Emulation.setScriptExecutionDisabled', { value: true });
+    const navigation = await send('Page.navigate', { url: `${origin}/index.html` }, 30000);
+    if (navigation.errorText) throw new Error(navigation.errorText);
+    await waitFor(() => loaded, 30000, 'No-JS load');
+    const { result: value } = await send('Runtime.evaluate', { returnByValue: true, expression: `(() => {
+      const nav = document.getElementById('section-nav');
+      return { menuVisible: Boolean(document.getElementById('menu-toggle').getClientRects().length),
+        linksVisible: [...nav.querySelectorAll('a')].filter(a => a.getClientRects().length).length,
+        overflow: document.documentElement.scrollWidth > innerWidth };
+    })()` });
+    Object.assign(result, value.value);
+    if (result.menuVisible) result.failures.push('Menu button visible without JavaScript');
+    if (result.linksVisible !== 5) result.failures.push(`Expected 5 visible section links without JavaScript, found ${result.linksVisible}`);
+    if (result.overflow) result.failures.push('Horizontal overflow without JavaScript');
+  } catch (error) {
+    result.failures.push(error.message);
+  } finally {
+    cdp.listeners.delete(listen);
+    await cdp.send('Target.closeTarget', { targetId }).catch(() => {});
+  }
+  return result;
+}
+
 try {
   await mkdir(output, { recursive: true });
   const origin = await serve();
@@ -423,6 +585,8 @@ try {
     summary.widths.push(result);
     summary.failures.push(...result.failures.map(message => `${width}px: ${message}`));
   }
+  summary.noScript = await checkNoScript(origin);
+  summary.failures.push(...summary.noScript.failures.map(message => `390px without JavaScript: ${message}`));
 } catch (error) {
   summary.failures.push(error.message);
   if (stderr) summary.chromeStderr = stderr;

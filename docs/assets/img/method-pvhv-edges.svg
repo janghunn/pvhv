@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 320" role="img" aria-labelledby="title desc">
+  <title id="title">PVHV of linear novel views from the edge rays through a foreground fragment</title>
+  <desc id="desc">Cross-section after Fig. 3(a) of the paper. Novel views N span a distance E from the source view s to the farthest novel view n. The edge ray e(s,f) from s and the edge ray e(n,f) from n pass through the edge f of the inner blocker; the outer blocker g lies farther, on e(s,f). The green triangle between the two rays beyond f is the PVHV H_s(N). At the depth of a tested point p, it spans a segment of length R from p' on e(s,f).</desc>
+  <rect width="360" height="320" fill="#ffffff"/>
+  <g font-family="Lato, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="17">
+    <path d="M188 180L140 36L316 36Z" fill="#18794e" fill-opacity=".2"/>
+    <path d="M36 252V40" stroke="#52625a" stroke-width="1.6"/>
+    <path d="M36 32L40 41L31.9 41Z" fill="#52625a"/>
+    <text x="43" y="38" text-anchor="start" font-size="15" fill="#52625a"><tspan font-style="italic">z</tspan></text>
+    <path d="M36 252H108" stroke="#52625a" stroke-width="1" stroke-dasharray="3 3"/>
+    <path d="M36 180H188" stroke="#52625a" stroke-width="1" stroke-dasharray="3 3"/>
+    <path d="M31 180h10" stroke="#52625a" stroke-width="1.6"/>
+    <text x="27" y="185" text-anchor="end" font-size="15" fill="#52625a"><tspan font-style="italic">f</tspan><tspan font-size="14" dy="4" font-style="italic">z</tspan><tspan dy="-4"></tspan></text>
+    <path d="M36 114H166" stroke="#52625a" stroke-width="1" stroke-dasharray="3 3"/>
+    <path d="M31 114h10" stroke="#52625a" stroke-width="1.6"/>
+    <text x="27" y="119" text-anchor="end" font-size="15" fill="#52625a"><tspan font-style="italic">g</tspan><tspan font-size="14" dy="4" font-style="italic">z</tspan><tspan dy="-4"></tspan></text>
+    <path d="M36 74H152.7" stroke="#52625a" stroke-width="1" stroke-dasharray="3 3"/>
+    <path d="M31 74h10" stroke="#52625a" stroke-width="1.6"/>
+    <text x="27" y="79" text-anchor="end" font-size="15" fill="#52625a"><tspan font-style="italic">p</tspan><tspan font-size="14" dy="4" font-style="italic">z</tspan><tspan dy="-4"></tspan></text>
+    <rect x="128" y="108" width="38" height="12" rx="1.5" fill="#dfe6e0" stroke="#17231c" stroke-width="1.6"/>
+    <rect x="188" y="174" width="40" height="12" rx="1.5" fill="#dfe6e0" stroke="#17231c" stroke-width="1.6"/>
+    <rect x="124" y="242" width="88" height="20" fill="#0072b2" fill-opacity=".1" stroke="#0072b2" stroke-width="1.4"/>
+    <path d="M212 252L140 42" stroke="#17231c" stroke-width="3"/>
+    <path d="M138 30L147.7 40.5L136.6 44.2Z" fill="#17231c"/>
+    <path d="M124 252L310.7 42" stroke="#0072b2" stroke-width="2.4" stroke-dasharray="7 4"/>
+    <path d="M321.3 30L317.1 43.6L308.3 35.8Z" fill="#0072b2"/>
+    <path d="M152.7 74H282.2" stroke="#18794e" stroke-width="4"/>
+    <path d="M152.7 60H282.2" stroke="#17231c" stroke-width="1"/>
+    <path d="M152.7 60L159.7 56.9L159.7 63.1Z" fill="#17231c"/>
+    <path d="M282.2 60L275.2 63.1L275.2 56.9Z" fill="#17231c"/>
+    <path d="M152.7 55v8M282.2 55v8" stroke="#17231c" stroke-width="1"/>
+    <text x="217.4" y="55" text-anchor="middle" font-size="15" fill="#17231c"><tspan font-style="italic">R</tspan></text>
+    <circle cx="152.7" cy="74" r="4.5" fill="#fff" stroke="#17231c" stroke-width="1.6"/>
+    <circle cx="211" cy="74" r="4.5" fill="#fff" stroke="#17231c" stroke-width="1.6"/>
+    <text x="211" y="95" text-anchor="middle" font-size="17" fill="#17231c"><tspan font-style="italic">p</tspan></text>
+    <text x="144.7" y="94" text-anchor="end" font-size="17" fill="#17231c"><tspan font-style="italic">p</tspan>′</text>
+    <circle cx="188" cy="180" r="4.5" fill="#fff" stroke="#17231c" stroke-width="1.6"/>
+    <text x="179" y="185" text-anchor="end" font-size="17" fill="#17231c"><tspan font-style="italic">f</tspan></text>
+    <circle cx="166" cy="114" r="4.5" fill="#fff" stroke="#17231c" stroke-width="1.6"/>
+    <text x="175" y="119" text-anchor="start" font-size="17" fill="#17231c"><tspan font-style="italic">g</tspan></text>
+    <text x="232" y="150" text-anchor="middle" font-size="17" fill="#18794e" font-weight="700" stroke="#ffffff" stroke-width="4" stroke-linejoin="round" paint-order="stroke"><tspan font-style="italic">H</tspan><tspan font-size="14" dy="4" font-style="italic">s</tspan><tspan dy="-4">(<tspan font-style="italic">N</tspan>)</tspan></text>
+    <text x="136" y="20" text-anchor="middle" font-size="17" fill="#17231c"><tspan font-weight="700">e</tspan>(<tspan font-style="italic">s</tspan>, <tspan font-style="italic">f</tspan>)</text>
+    <text x="325.3" y="20" text-anchor="end" font-size="17" fill="#0072b2"><tspan font-weight="700">e</tspan>(<tspan font-style="italic">n</tspan>, <tspan font-style="italic">f</tspan>)</text>
+    <circle cx="124" cy="252" r="14" fill="#e6f1f8" stroke="#0072b2" stroke-width="2"/><text x="124" y="258" text-anchor="middle" font-size="17" fill="#0072b2"><tspan font-style="italic">n</tspan></text>
+    <circle cx="212" cy="252" r="14" fill="#ffffff" stroke="#17231c" stroke-width="2"/><text x="212" y="258" text-anchor="middle" font-size="17" fill="#17231c"><tspan font-style="italic">s</tspan></text>
+    <text x="168" y="258" text-anchor="middle" font-size="15" fill="#0072b2"><tspan font-style="italic">N</tspan></text>
+    <path d="M124 278H212" stroke="#17231c" stroke-width="1"/>
+    <path d="M124 278L131 274.9L131 281.1Z" fill="#17231c"/>
+    <path d="M212 278L205 281.1L205 274.9Z" fill="#17231c"/>
+    <text x="168" y="298" text-anchor="middle" font-size="15" fill="#17231c"><tspan font-style="italic">E</tspan></text>
+  </g>
+</svg>
