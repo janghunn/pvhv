@@ -2,40 +2,40 @@
   <title id="title">PVHV definition: hidden from the source view and visible from the novel view</title>
   <desc id="desc">Cross-section after Fig. 2 of the paper. A source view s and a novel view n look at three blockers. Hatched wedges behind the blockers are the volume O_s hidden from s. Green parts of those wedges are also visible from n (outside the dashed blue shadow rays from n): the PVHV H_s(n) = O_s ∩ V_n.</desc>
   <rect width="360" height="320" fill="#ffffff"/>
-  <g font-family="Lato, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="17">
+  <g font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="17">
     <defs>
       <clipPath id="frame"><rect x="0" y="18" width="360" height="220"/></clipPath>
       <mask id="vn" maskUnits="userSpaceOnUse" x="0" y="0" width="360" height="320"><rect width="360" height="320" fill="#fff"/><path d="M206 178L236 178L524 18L414 18ZM252 116L292 116L423.7 18L351.6 18ZM66 80L106 80L97.4 18L41.7 18Z" fill="#000"/></mask>
-      <pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="#eef1ee"/><path d="M0 0V7" stroke="#9aa79f" stroke-width="2"/></pattern>
+      <pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="#f4f1ea"/><path d="M0 0V7" stroke="#a8a196" stroke-width="2"/></pattern>
     </defs>
     <g clip-path="url(#frame)">
       <path d="M206 178L236 178L273.3 18L163.3 18ZM252 116L292 116L348.2 18L276.1 18ZM66 80L106 80L60.5 18L4.8 18Z" fill="url(#hatch)"/>
-      <path d="M206 178L236 178L273.3 18L163.3 18ZM252 116L292 116L348.2 18L276.1 18ZM66 80L106 80L60.5 18L4.8 18Z" fill="#18794e" fill-opacity=".38" mask="url(#vn)"/>
-      <path d="M222 238L163.3 18" stroke="#17231c" stroke-width="1.3" stroke-dasharray="2 3"/>
+      <path d="M206 178L236 178L273.3 18L163.3 18ZM252 116L292 116L348.2 18L276.1 18ZM66 80L106 80L60.5 18L4.8 18Z" fill="#0d7352" fill-opacity=".38" mask="url(#vn)"/>
+      <path d="M222 238L163.3 18" stroke="#1d1b18" stroke-width="1.3" stroke-dasharray="2 3"/>
       <path d="M128 238L414 18" stroke="#0072b2" stroke-width="1.3" stroke-dasharray="6 4"/>
-      <path d="M222 238L273.3 18" stroke="#17231c" stroke-width="1.3" stroke-dasharray="2 3"/>
+      <path d="M222 238L273.3 18" stroke="#1d1b18" stroke-width="1.3" stroke-dasharray="2 3"/>
       <path d="M128 238L524 18" stroke="#0072b2" stroke-width="1.3" stroke-dasharray="6 4"/>
-      <path d="M222 238L276.1 18" stroke="#17231c" stroke-width="1.3" stroke-dasharray="2 3"/>
+      <path d="M222 238L276.1 18" stroke="#1d1b18" stroke-width="1.3" stroke-dasharray="2 3"/>
       <path d="M128 238L351.6 18" stroke="#0072b2" stroke-width="1.3" stroke-dasharray="6 4"/>
-      <path d="M222 238L348.2 18" stroke="#17231c" stroke-width="1.3" stroke-dasharray="2 3"/>
+      <path d="M222 238L348.2 18" stroke="#1d1b18" stroke-width="1.3" stroke-dasharray="2 3"/>
       <path d="M128 238L423.7 18" stroke="#0072b2" stroke-width="1.3" stroke-dasharray="6 4"/>
-      <path d="M222 238L4.8 18" stroke="#17231c" stroke-width="1.3" stroke-dasharray="2 3"/>
+      <path d="M222 238L4.8 18" stroke="#1d1b18" stroke-width="1.3" stroke-dasharray="2 3"/>
       <path d="M128 238L41.7 18" stroke="#0072b2" stroke-width="1.3" stroke-dasharray="6 4"/>
-      <path d="M222 238L60.5 18" stroke="#17231c" stroke-width="1.3" stroke-dasharray="2 3"/>
+      <path d="M222 238L60.5 18" stroke="#1d1b18" stroke-width="1.3" stroke-dasharray="2 3"/>
       <path d="M128 238L97.4 18" stroke="#0072b2" stroke-width="1.3" stroke-dasharray="6 4"/>
     </g>
-    <rect x="206" y="178" width="30" height="9" rx="1.5" fill="#dfe6e0" stroke="#17231c" stroke-width="1.6"/>
-    <rect x="252" y="116" width="40" height="9" rx="1.5" fill="#dfe6e0" stroke="#17231c" stroke-width="1.6"/>
-    <rect x="66" y="80" width="40" height="9" rx="1.5" fill="#dfe6e0" stroke="#17231c" stroke-width="1.6"/>
+    <rect x="206" y="178" width="30" height="9" rx="1.5" fill="#ece7dc" stroke="#1d1b18" stroke-width="1.6"/>
+    <rect x="252" y="116" width="40" height="9" rx="1.5" fill="#ece7dc" stroke="#1d1b18" stroke-width="1.6"/>
+    <rect x="66" y="80" width="40" height="9" rx="1.5" fill="#ece7dc" stroke="#1d1b18" stroke-width="1.6"/>
     <circle cx="128" cy="238" r="14" fill="#e6f1f8" stroke="#0072b2" stroke-width="2"/><text x="128" y="244" text-anchor="middle" font-size="17" fill="#0072b2"><tspan font-style="italic">n</tspan></text>
-    <circle cx="222" cy="238" r="14" fill="#ffffff" stroke="#17231c" stroke-width="2"/><text x="222" y="244" text-anchor="middle" font-size="17" fill="#17231c"><tspan font-style="italic">s</tspan></text>
-    <text x="196" y="44" text-anchor="middle" font-size="17" fill="#18794e" font-weight="700" stroke="#ffffff" stroke-width="4" stroke-linejoin="round" paint-order="stroke"><tspan font-style="italic">H</tspan><tspan font-size="14" dy="4" font-style="italic">s</tspan><tspan dy="-4">(<tspan font-style="italic">n</tspan>)</tspan></text>
-    <text x="64" y="50" text-anchor="middle" font-size="17" fill="#17231c" font-weight="700" stroke="#ffffff" stroke-width="4" stroke-linejoin="round" paint-order="stroke"><tspan font-style="italic">O</tspan><tspan font-size="14" dy="4" font-style="italic">s</tspan><tspan dy="-4"></tspan></text>
-    <rect x="8" y="264" width="18" height="14" fill="url(#hatch)" stroke="#52625a"/>
-    <text x="32" y="276" text-anchor="start" font-size="15" fill="#17231c"><tspan font-style="italic">O</tspan><tspan font-size="14" dy="4" font-style="italic">s</tspan><tspan dy="-4">: hidden from <tspan font-style="italic">s</tspan></tspan></text>
+    <circle cx="222" cy="238" r="14" fill="#ffffff" stroke="#1d1b18" stroke-width="2"/><text x="222" y="244" text-anchor="middle" font-size="17" fill="#1d1b18"><tspan font-style="italic">s</tspan></text>
+    <text x="196" y="44" text-anchor="middle" font-size="17" fill="#0d7352" font-weight="700" stroke="#ffffff" stroke-width="4" stroke-linejoin="round" paint-order="stroke"><tspan font-style="italic">H</tspan><tspan font-size="14" dy="4" font-style="italic">s</tspan><tspan dy="-4">(<tspan font-style="italic">n</tspan>)</tspan></text>
+    <text x="64" y="50" text-anchor="middle" font-size="17" fill="#1d1b18" font-weight="700" stroke="#ffffff" stroke-width="4" stroke-linejoin="round" paint-order="stroke"><tspan font-style="italic">O</tspan><tspan font-size="14" dy="4" font-style="italic">s</tspan><tspan dy="-4"></tspan></text>
+    <rect x="8" y="264" width="18" height="14" fill="url(#hatch)" stroke="#5c564c"/>
+    <text x="32" y="276" text-anchor="start" font-size="15" fill="#1d1b18"><tspan font-style="italic">O</tspan><tspan font-size="14" dy="4" font-style="italic">s</tspan><tspan dy="-4">: hidden from <tspan font-style="italic">s</tspan></tspan></text>
     <path d="M184 271h24" stroke="#0072b2" stroke-width="1.6" stroke-dasharray="6 4"/>
     <text x="214" y="276" text-anchor="start" font-size="15" fill="#0072b2">edges seen from <tspan font-style="italic">n</tspan></text>
-    <rect x="8" y="290" width="18" height="14" fill="#18794e" fill-opacity=".38" stroke="#18794e"/>
-    <text x="32" y="302" text-anchor="start" font-size="15" fill="#17231c">PVHV <tspan font-style="italic">H</tspan><tspan font-size="14" dy="4" font-style="italic">s</tspan><tspan dy="-4">(<tspan font-style="italic">n</tspan>)</tspan> = <tspan font-style="italic">O</tspan><tspan font-size="14" dy="4" font-style="italic">s</tspan><tspan dy="-4"> ∩ <tspan font-style="italic">V</tspan><tspan font-size="14" dy="4" font-style="italic">n</tspan><tspan dy="-4"></tspan></tspan></text>
+    <rect x="8" y="290" width="18" height="14" fill="#0d7352" fill-opacity=".38" stroke="#0d7352"/>
+    <text x="32" y="302" text-anchor="start" font-size="15" fill="#1d1b18">PVHV <tspan font-style="italic">H</tspan><tspan font-size="14" dy="4" font-style="italic">s</tspan><tspan dy="-4">(<tspan font-style="italic">n</tspan>)</tspan> = <tspan font-style="italic">O</tspan><tspan font-size="14" dy="4" font-style="italic">s</tspan><tspan dy="-4"> ∩ <tspan font-style="italic">V</tspan><tspan font-size="14" dy="4" font-style="italic">n</tspan><tspan dy="-4"></tspan></tspan></text>
   </g>
 </svg>

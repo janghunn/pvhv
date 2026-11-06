@@ -6,23 +6,32 @@
 <title>PVHV demo harness</title>
 <link rel="icon" href="data:,">
 <style>
-  /* Values of the project page's tokens (docs/assets/css/tokens.css). */
+  /* These values mirror docs/assets/css/tokens.css in its light theme. */
   :root {
-    --bg:#f2f5ef; --surface:#fbfcf9; --ink:#17231c; --muted:#52625a; --line:#d3ddd3;
-    --accent:#18794e; --accent-ink:#ffffff; --control:#6b7a70; --paint:#a5520a;
-    --r:10px; --card-r:16px; --maxw:1080px;
+    --bg: #fcfbf8;
+    --bg2: #f4f1ea;
+    --card: #ffffff;
+    --line: #e6e0d4;
+    --line-strong: #8f877a;
+    --fg: #1d1b18;
+    --muted: #5c564c;
+    --accent-c: #2453b3;
+    --focus: #2453b3;
+    --radius-s: 8px;
+    --radius-m: 14px;
+    --wrap: 1120px;
   }
   html { -webkit-text-size-adjust:100%; }
-  body { margin:0; background:var(--bg); color:var(--ink); line-height:1.55;
+  body { margin:0; background:var(--bg); color:var(--fg); line-height:1.55;
     font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif; }
-  .wrap { max-width:var(--maxw); margin:0 auto; padding:0 1rem; }
+  .wrap { max-width:var(--wrap); margin:0 auto; padding:0 1rem; }
   header { padding:2rem 0 1rem; }
   h1 { margin:0; font-size:1.5rem; }
-  .card { background:var(--surface); border:1px solid var(--line); border-radius:var(--card-r);
+  .card { background:var(--card); border:1px solid var(--line); border-radius:var(--radius-m);
     padding:1.5rem; margin:1rem 0 2.5rem; }
   .card h2 { margin:0 0 1rem; font-size:1.25rem; }
-  .slot-box { display:flex; align-items:center; justify-content:center; border:1px dashed var(--control);
-    border-radius:var(--r); color:var(--muted); }
+  .slot-box { display:flex; align-items:center; justify-content:center; border:1px dashed var(--line-strong);
+    border-radius:var(--radius-s); color:var(--muted); }
   .note { color:var(--muted); font-size:.9rem; margin:.75rem 0 0; }
 </style>
 <script>

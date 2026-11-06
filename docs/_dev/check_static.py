@@ -4,6 +4,7 @@
 import argparse
 import colorsys
 import difflib
+import hashlib
 from html import unescape
 from html.parser import HTMLParser
 import json
@@ -123,7 +124,7 @@ def check_facts(page, facts):
 
 
 def check_navigation(page, facts):
-    rows = [node for node in page.nodes() if node.has_class("btns")]
+    rows = [node for node in page.nodes() if node.has_class("paper-links")]
     require(len(rows) == 1, "expected one resource row")
     anchors = [node for node in rows[0].descendants() if node.tag == "a"]
     expected = [
@@ -133,7 +134,8 @@ def check_navigation(page, facts):
         ("BibTeX", "#bibtex"),
     ]
     equal([(node.text().strip(), node.attrs.get("href")) for node in anchors], expected, "resource buttons")
-    require(anchors[0].has_class("btn") and anchors[0].has_class("primary"), "Paper must be the primary button")
+    require(all(node.has_class("btn") and node.has_class("btn-pill") for node in anchors),
+            "each resource must be a kit link pill")
     equal(anchors[1].attrs.get("title"), "PDF from the ACM Digital Library (open access)", "PDF title")
     for node in anchors[:3]:
         require(node.attrs.get("target") == "_blank"
@@ -432,7 +434,9 @@ def check_resources():
         require(not any(external(url) for url in css_urls), f"{path.name}: external CSS URL/import")
         if path.suffix.lower() in {".js", ".mjs"}:
             js_urls.extend(re.findall(r"https?://[^\s'\"`<>]+", source))
-            require(not re.search(r"['\"]//", source), f"{path.name}: protocol-relative JS URL")
+            # The kit URL builder is pinned by check_kit; every other resource rule still applies.
+            if path.relative_to(DOCS).as_posix() != "assets/js/kit.js":
+                require(not re.search(r"['\"]//", source), f"{path.name}: protocol-relative JS URL")
             loads = re.findall(
                 r"(?:\b(?:fetch|import|importScripts|Worker|SharedWorker|EventSource|WebSocket)\s*\(\s*"
                 r"|\b(?:from|import)\s+|\.(?:src|srcset)\s*=\s*"
@@ -485,33 +489,167 @@ def check_note(page):
     return "independent 2026 re-implementation and experiment-code distinction stated"
 
 
-def luminance(value):
-    if len(value) == 3:
-        value = "".join(char * 2 for char in value)
-    channels = [int(value[index:index + 2], 16) / 255 for index in (0, 2, 4)]
-    linear = [channel / 12.92 if channel <= .04045 else ((channel + .055) / 1.055) ** 2.4 for channel in channels]
+def declarations(source):
+    source = re.sub(r"/\*.*?\*/", "", source, flags=re.S)
+    return dict(re.findall(r"--([\w-]+)\s*:\s*([^;]+);", source))
+
+
+def palettes():
+    source = (DOCS / "assets/css/tokens.css").read_text(encoding="utf-8")
+    blocks = [re.search(pattern, source) for pattern in (
+        r":root\s*\{([^}]+)\}",
+        r':root\[data-theme="dark"\]\s*\{([^}]+)\}',
+        r"@media\s*\(prefers-color-scheme: dark\)\s*\{\s*:root:not\(\[data-theme\]\)\s*\{([^}]+)\}",
+    )]
+    require(all(blocks), "tokens must define light, dark and OS dark palettes")
+    light, dark, media = [block.group(1) for block in blocks]
+    for block, expected in ((light, "light"), (dark, "dark"), (media, "dark")):
+        scheme = re.search(r"color-scheme\s*:\s*([^;]+);", block)
+        require(scheme and scheme.group(1).strip() == expected, f"palette must declare color-scheme: {expected}")
+    return declarations(light), declarations(dark), declarations(media)
+
+
+def colour(value):
+    if value.startswith("#"):
+        value = value[1:]
+        if len(value) == 3:
+            value = "".join(char * 2 for char in value)
+        return [int(value[index:index + 2], 16) / 255 for index in (0, 2, 4)] + [1.0]
+    require(bool(re.fullmatch(r"rgba?\([\d.,\s]+\)", value)), f"unsupported colour {value}")
+    channels = [float(item) for item in re.findall(r"[\d.]+", value)]
+    return [item / 255 for item in channels[:3]] + [channels[3] if len(channels) == 4 else 1.0]
+
+
+def luminance(channels):
+    linear = [channel / 12.92 if channel <= .04045 else ((channel + .055) / 1.055) ** 2.4
+              for channel in channels[:3]]
     return sum(channel * weight for channel, weight in zip(linear, (.2126, .7152, .0722)))
 
 
 def check_contrast():
-    tokens = dict(re.findall(r"--([\w-]+)\s*:\s*#([0-9a-fA-F]{3,6})\b", (DOCS / "assets/css/tokens.css").read_text()))
-    pairs = [(fg, bg, 4.5) for fg in ("ink", "muted", "accent") for bg in ("bg", "surface", "tint")]
-    pairs += [("accent-ink", "accent", 4.5), ("control", "surface", 3.0), ("control", "bg", 3.0),
-              ("paint", "bg", 3.0), ("paint", "surface", 3.0)]
-    # Slot labels use ink/muted on surface, and their stripe also uses the checked bg.
+    light, dark, media = palettes()
+    require(dark.keys() <= light.keys(), "dark palette defines a key absent from light")
+    palette_roles = set("bg bg2 card line line-strong fg muted accent-a accent-b accent-c warn on-accent "
+                        "btn-bg btn-fg code-bg code-fg focus selection glow-a glow-b glow-opacity grid-dot "
+                        "tint shadow-1 shadow-2".split())
+    require(dark.keys() <= palette_roles, "dark block must override palette roles only")
+    equal(media, dark, "OS dark and explicit dark palettes")
+    pairs = [(fg, bg, 4.5) for fg in ("fg", "muted", "accent-a", "accent-b", "accent-c")
+             for bg in ("bg", "bg2", "card")]
+    pairs += [("btn-fg", "btn-bg", 4.5), ("code-fg", "code-bg", 4.5), ("muted", "code-bg", 4.5)]
+    pairs += [(fg, bg, 3.0) for fg in ("line-strong", "focus") for bg in ("bg", "bg2", "card")]
+    required = {role for fg, bg, _ in pairs for role in (fg, bg)} | {"glow-a", "glow-b", "glow-opacity"}
+    require(required <= dark.keys(), "dark block lacks a tested palette role")
     failures = []
-    for fg, bg, minimum in pairs:
-        first, second = sorted([luminance(tokens[fg]), luminance(tokens[bg])])
-        ratio = (second + .05) / (first + .05)
-        print(f"{'OK' if ratio >= minimum else 'FAIL'} contrast.{fg}/{bg}: {ratio:.2f}:1 (minimum {minimum:.1f}:1)")
-        if ratio < minimum:
-            failures.append(f"{fg}/{bg}")
+    for theme, tokens in (("light", light), ("dark", dark)):
+        def measure(fg, bg, minimum, label):
+            first, second = sorted([luminance(fg), luminance(bg)])
+            ratio = (second + .05) / (first + .05)
+            print(f"{'OK' if ratio >= minimum else 'FAIL'} contrast.{theme}.{label}: "
+                  f"{ratio:.2f}:1 (minimum {minimum:.1f}:1)")
+            if ratio < minimum:
+                failures.append(f"{theme}.{label}")
+        for fg, bg, minimum in pairs:
+            measure(colour(tokens[fg]), colour(tokens[bg]), minimum, f"{fg}/{bg}")
+        for glow in ("glow-a", "glow-b"):
+            wash, bg = colour(tokens[glow]), colour(tokens["bg"])
+            alpha = wash[3] * float(tokens["glow-opacity"]) * .7
+            back = [wash[index] * alpha + bg[index] * (1 - alpha) for index in range(3)]
+            for fg in ("fg", "muted", "accent-c"):
+                measure(colour(tokens[fg]), back, 4.5, f"{fg}/{glow}")
+        for accent, low, high in (("accent-b", 90, 170), ("accent-a", 0, 60)):
+            hue = colorsys.rgb_to_hls(*colour(tokens[accent])[:3])[0] * 360
+            require(low <= hue <= high, f"{theme}.{accent} hue {hue:.1f} outside {low}-{high}")
+            print(f"OK {theme}.{accent}-hue: {hue:.1f} degrees ({low}-{high})")
     require(not failures, "contrast below threshold: " + ", ".join(failures))
-    red, green, blue = (int(tokens["accent"][index:index + 2], 16) / 255 for index in (0, 2, 4))
-    hue = colorsys.rgb_to_hls(red, green, blue)[0] * 360
-    print(f"{'OK' if 90 <= hue <= 170 else 'FAIL'} accent-hue: {hue:.1f} degrees (green: 90-170)")
-    require(90 <= hue <= 170, f"accent hue {hue:.1f} is not green")
-    return "all text pairs including slot labels meet AA; control borders and focus ring meet 3:1; accent is green"
+    return "both palettes and masthead glows meet AA; control borders and focus meet 3:1; accent hues match the kit"
+
+
+def check_kit(page, kit):
+    pins = {
+        "assets/css/tokens.css": "f5311c5bd69ade3fa5a30a2981d8858a21a3edaf3cf978ea7cd874735b195e1d",
+        "assets/css/base.css": "6767a81361a610685cc3276dc43b1c6e8397f91897058f4c3a5cab595613594c",
+        "assets/js/kit.js": "47c025656f00148bb58235d6d6172b1303021d3d7d7fcaddc380c211e3a3157f",
+    }
+    for name, digest in pins.items():
+        data = (DOCS / name).read_bytes()
+        equal(hashlib.sha256(data).hexdigest(), digest, f"kit hash/{name}")
+        if kit:
+            equal(data, (kit / Path(name).name).read_bytes(), f"kit bytes/{name}")
+    html = next(node for node in page.nodes() if node.tag == "html")
+    require(html.attrs.get("data-theme-default") == "light" and html.attrs.get("data-theme") == "light",
+            "paper must declare light as its initial theme and default")
+    head = next(node for node in page.nodes() if node.tag == "head")
+    children = [node for node in head.children if isinstance(node, Node)]
+    require(len(children) >= 2 and children[0].tag == "meta" and "charset" in children[0].attrs
+            and children[1].tag == "script" and children[1].attrs == {"data-ppk-variant": "light"},
+            "the classic pre-paint light script must immediately follow the charset")
+    equal(hashlib.sha256(children[1].text().encode()).hexdigest(),
+          "f75861806c94a78e5ee35c96dc0fe9610075d7692aeeb9b6fd1c09f81d12e3d3", "pre-paint script hash")
+    require(sum("data-theme-toggle" in node.attrs for node in page.nodes()) == 1, "expected one theme toggle")
+    return "kit assets and pre-paint script match pinned hashes; light shell and single theme toggle present"
+
+
+def check_masthead(page, facts):
+    top = page.by_id("top")
+    nodes = list(top.descendants())
+    require(any(node.has_class("hero-glow") for node in nodes), "masthead needs its hero glow")
+    headings = [node for node in nodes if node.tag == "h1"]
+    emphasis = [node for node in page.nodes() if node.tag == "em"]
+    require(len(headings) == 1 and len(emphasis) == 1 and emphasis[0] in set(headings[0].descendants())
+            and emphasis[0].text() == "PVHV", "only h1 may hold the PVHV emphasis")
+    badges = [node for node in page.nodes() if node.has_class("venue")]
+    require(len(badges) == 1 and badges[0] in nodes, "expected one venue pill in the masthead")
+    def visible_text(node):
+        if node.has_class("vh") or node.attrs.get("aria-hidden") == "true" or "hidden" in node.attrs:
+            return ""
+        return "".join(visible_text(child) if isinstance(child, Node) else child for child in node.children)
+    equal(visible_text(badges[0]), facts["venue"], "visible venue pill")
+    require(page.by_id("venue") in set(badges[0].descendants()), "venue fact must sit inside the single pill")
+    require(all(phrase in facts["venue"] for phrase in ("ACM Transactions on Graphics 42(4)", "SIGGRAPH 2023")),
+            "venue must name both journal and proceedings as one publication")
+    require(not any(node is not badges[0] and any(node.has_class(name) for name in ("venue", "eyebrow", "chip"))
+                    for node in nodes), "unexpected masthead badge")
+    flags = [node for node in nodes if node.has_class("reimpl-flag")]
+    require(len(flags) == 1, "expected one re-implementation flag")
+    equal(flags[0].text(), "Code, figures and demo on this page: independent 2026 re-implementation — details.",
+          "re-implementation flag")
+    require(any(node.tag == "a" and node.attrs.get("href") == "#reimplementation"
+                for node in flags[0].descendants()), "flag must link to the re-implementation note")
+    return "hero glow, large PVHV emphasis, one complete publication pill and exact re-implementation flag present"
+
+
+def check_style_files():
+    require(not (DOCS / "assets/fonts").exists(), "obsolete bundled fonts directory remains")
+    files = site_files()
+    readme = DOCS.parent / "README.md"
+    for path in [*files, readme]:
+        require(not re.search(r"Lato", path.read_text(encoding="utf-8"), re.I),
+                f"obsolete font reference in {path.relative_to(DOCS.parent)}")
+    tokens = declarations((DOCS / "assets/css/tokens.css").read_text(encoding="utf-8"))
+    for name in ("assets/css/components.css", "assets/css/page.css", "assets/js/demo.js"):
+        source = (DOCS / name).read_text(encoding="utf-8")
+        defined = set(tokens) | set(declarations(source))
+        used = set(re.findall(r"var\(\s*--([\w-]+)", source))
+        require(used <= defined, f"{name}: undefined tokens {sorted(used - defined)}")
+    demo = (DOCS / "assets/js/demo.js").read_text(encoding="utf-8")
+    require(not re.search(r"#[0-9a-fA-F]{3,8}\b|\brgba?\(", demo), "demo CSS contains raw colours")
+    require(not re.search(r"var\(\s*--[\w-]+\s*,", demo), "demo CSS contains token fallbacks")
+    page_css = (DOCS / "assets/css/page.css").read_text(encoding="utf-8")
+    require(all(value == "#fff" for value in re.findall(r"#[0-9a-fA-F]+\b", page_css)),
+            "page CSS raw hex colours are limited to the white SVG mat")
+    old_names = r"--(?:ink|surface|control|paint|accent-ink|card-r|maxw)(?![\w-])"
+    harness = DOCS.parent / "demo/harness.html"
+    for path in [*[path for path in files if path.suffix in {".css", ".js", ".mjs"}], harness]:
+        require(not re.search(old_names, path.read_text(encoding="utf-8")),
+                f"obsolete token in {path.relative_to(DOCS.parent)}")
+    light, _, _ = palettes()
+    harness_tokens = declarations(harness.read_text(encoding="utf-8"))
+    equal(set(harness_tokens), set("bg bg2 card line line-strong fg muted accent-c focus radius-s radius-m wrap".split()),
+          "harness token roles")
+    for name, value in harness_tokens.items():
+        equal(value, light[name], f"harness light token/{name}")
+    return "system fonts, resolved kit tokens, demo colours without fallbacks and matching light harness values"
 
 
 def check_leftovers():
@@ -533,6 +671,7 @@ def main():
     parser.add_argument("--crossref", type=Path)
     parser.add_argument("--acm", type=Path)
     parser.add_argument("--acm-bib", type=Path)
+    parser.add_argument("--kit", type=Path)
     args = parser.parse_args()
     try:
         source = (DOCS / "index.html").read_text(encoding="utf-8")
@@ -554,6 +693,9 @@ def main():
         ("forbidden-references", check_forbidden_references),
         ("forbidden-files", check_files),
         ("reimplementation", lambda: check_note(page)),
+        ("kit", lambda: check_kit(page, args.kit)),
+        ("masthead", lambda: check_masthead(page, facts)),
+        ("style-files", check_style_files),
         ("contrast", check_contrast),
         ("leftovers", check_leftovers),
     ]

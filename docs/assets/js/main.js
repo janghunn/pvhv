@@ -5,7 +5,7 @@
   const menu = document.getElementById('menu-toggle');
   const nav = document.getElementById('section-nav');
   if (menu && nav && window.matchMedia) {
-    const mobile = window.matchMedia('(max-width: 819px)');
+    const mobile = window.matchMedia('(max-width: 859.98px)');
     const setOpen = (open, returnFocus = false) => {
       menu.setAttribute('aria-expanded', String(open));
       nav.hidden = mobile.matches && !open;

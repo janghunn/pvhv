@@ -1,0 +1,105 @@
+/* PVHV page layout and integration overrides. */
+[hidden] { display: none !important; }
+
+.brand-mark.pvhv-mark { background: none; box-shadow: none; border-radius: 0; }
+.pvhv-mark svg { width: 22px; height: 22px; }
+.topbar .wrap { position: relative; }
+html:not(.js) .navlinks { display: flex; flex-wrap: wrap; justify-content: flex-end; }
+html:not(.js) .tools { display: none; }
+@media (min-width: 860px) { .menu-toggle { display: none; } }
+@media (max-width: 859.98px) {
+  .js #section-nav:not([hidden]) {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-1);
+    padding: var(--sp-3) var(--gutter);
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    box-shadow: var(--shadow-2);
+    max-height: calc(100dvh - var(--nav-h));
+    overflow-y: auto;
+  }
+  .js #section-nav a { color: var(--fg); }
+}
+
+.paper-head { padding: clamp(24px, 4vw, 56px) 0 clamp(20px, 2.5vw, 32px); }
+.paper-title { max-width: 30ch; margin-top: 16px; }
+.paper-title em { display: block; width: fit-content; margin-inline: auto; font-size: 1.5em; line-height: 1.05; margin-bottom: .1em; }
+.byline { max-width: 60rem; margin: 14px auto 0; }
+.byline > span { display: block; }
+#authors { color: var(--fg); font-size: var(--fs-md); font-weight: 700; }
+#affiliation { color: var(--muted); font-size: var(--fs-sm); margin-top: 4px; }
+.paper-head .paper-links { margin-top: 18px; }
+@media (max-width: 639.98px) {
+  .paper-head .paper-links { gap: var(--sp-2); }
+  .paper-head .paper-links .btn-pill { padding: 0 14px 0 11px; }
+}
+.venue {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: var(--fs-sm);
+  padding-block: 0;
+  max-width: 100%;
+  text-align: left;
+  border-radius: var(--radius-l);
+}
+.venue::before { flex: none; }
+.venue a { display: inline-flex; align-items: center; min-height: 44px; min-width: 0; color: inherit; text-decoration-color: currentColor; }
+.reimpl-flag { max-width: 62ch; margin: var(--sp-4) auto 0; color: var(--muted); font-size: var(--fs-sm); }
+
+.reading { max-width: 760px; margin-inline: auto; }
+.teaser + .section { padding-top: 0; }
+.paper .section-head { max-width: 760px; }
+.paper .prose.reading { max-width: 760px; }
+.slot { min-width: 0; }
+.credit { display: block; margin-top: var(--sp-1); }
+.note { color: var(--muted); font-size: var(--fs-sm); }
+.section-head .note { margin: 0; }
+.figure figcaption { max-width: none; }
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: var(--sp-5); }
+.panel { min-width: 0; max-width: 480px; width: 100%; justify-self: center; }
+.panel img { width: 100%; border: 1px solid var(--line); border-radius: var(--radius-s); background: #fff; }
+.panel-cap { margin: var(--sp-2) 0 0; color: var(--fg); font-size: var(--fs-sm); line-height: 1.5; }
+.panel-title { display: block; font-weight: 700; }
+.method-fig figcaption { border-top: 1px solid var(--line); padding-top: var(--sp-3); }
+.bullets { max-width: 760px; margin: var(--sp-6) auto 0; padding-left: var(--sp-5); }
+.bullets li { margin-top: var(--sp-3); }
+.bullets li::marker { color: var(--accent-b); }
+.gallery { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-6); }
+.slot-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-5);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-s);
+  background: var(--card);
+  color: var(--muted);
+  text-align: center;
+}
+.slot-tag { font-size: var(--fs-xs); font-weight: 700; }
+.slot-name { color: var(--fg); font-size: var(--fs-md); }
+.slot-meta { font-family: var(--font-mono); font-size: var(--fs-xs); overflow-wrap: anywhere; }
+.note-card { position: relative; padding-left: calc(var(--sp-5) + 6px); }
+.note-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: var(--radius-m) 0 0 var(--radius-m);
+  background: linear-gradient(180deg, var(--accent-a), var(--accent-b));
+}
+.note-card h2 { margin-bottom: var(--sp-5); }
+.note-card p:last-child { margin-bottom: 0; }
+#citation { white-space: pre-wrap; overflow-wrap: anywhere; }
+.codeblock-head, .codeblock-actions { flex-wrap: wrap; }
+.codeblock-actions { min-width: 0; }
+#copy-status { overflow-wrap: anywhere; }
