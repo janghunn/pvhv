@@ -308,6 +308,117 @@ function targetSizes() {
 }
 
 function mastheadState() {
+  const top = document.querySelector('#top'), byline = top.querySelector('.byline');
+  const paperLinks = top.querySelector('.paper-links');
+  return { images: top.querySelectorAll('img').length,
+    logoClass: [...document.querySelectorAll('[class]')].filter(element => /logo/i.test(element.getAttribute('class'))).length,
+    logoSrc: [...document.querySelectorAll('img, source')].filter(element =>
+      ['src', 'srcset'].some(attribute => /logo/i.test(element.getAttribute(attribute) || ''))).length,
+    adjacent: Boolean(byline && paperLinks && byline.nextElementSibling === paperLinks),
+    gap: paperLinks.getBoundingClientRect().top - byline.getBoundingClientRect().bottom,
+    expectedGap: parseFloat(getComputedStyle(paperLinks).marginTop) + parseFloat(getComputedStyle(byline).marginBottom),
+    affiliation: top.querySelector('#affiliation').innerText,
+    venue: top.querySelector('#venue').innerText,
+    inViewport: ['.venue', '#authors', '#affiliation', '.paper-links'].every(selector => {
+      const element = top.querySelector(selector), bounds = element?.getBoundingClientRect();
+      return Boolean(bounds && bounds.width > 0 && bounds.height > 0 && bounds.left >= 0 && bounds.top >= 0 &&
+        bounds.right <= innerWidth + 1 && bounds.bottom <= innerHeight + 1);
+    }) };
+}
+
+async function recordMasthead(evaluate, result) {
+  result.masthead = await evaluate(`(${mastheadState.toString()})()`);
+  const state = result.masthead;
+  if (state.images !== 0) result.failures.push(`Masthead must contain no images, found ${state.images}`);
+  if (state.logoClass !== 0) result.failures.push(`Page must contain no logo classes, found ${state.logoClass}`);
+  if (state.logoSrc !== 0) result.failures.push(`Page must contain no logo image sources, found ${state.logoSrc}`);
+  if (!state.adjacent) result.failures.push('Masthead byline must be followed directly by the resource row');
+  if (Math.abs(state.gap - state.expectedGap) > 1) {
+    result.failures.push(`Masthead gap ${state.gap}px differs from expected ${state.expectedGap}px`);
+  }
+  if (state.affiliation !== 'Sungkyunkwan University, Suwon, South Korea') result.failures.push('Masthead affiliation differs');
+  if (state.venue !== 'ACM Transactions on Graphics 42(4), Article 86, August 2023 (SIGGRAPH 2023)') {
+    result.failures.push('Masthead venue differs');
+  }
+  if (!state.inViewport) result.failures.push('Masthead venue, authors, affiliation and resource row must be in the first viewport');
+}
+
+function zoomState(slot) {
+  const figure = document.querySelector('[data-slot="' + slot + '"]');
+  const button = figure.querySelector('[data-zoom]'), frame = figure.querySelector('.figure-frame');
+  const image = frame.querySelector('img');
+  return { pressed: button.getAttribute('aria-pressed'), label: button.textContent,
+    zoomed: frame.classList.contains('is-zoomed'), width: image.getBoundingClientRect().width,
+    inlineWidth: image.style.width, naturalWidth: image.naturalWidth, labelPx: Number(button.dataset.labelPx),
+    scrollWidth: frame.scrollWidth, clientWidth: frame.clientWidth,
+    tabindex: frame.getAttribute('tabindex'), role: frame.getAttribute('role'), labelRegion: frame.getAttribute('aria-label') };
+}
+
+async function checkZoom(send, evaluate, press, result) {
+  const controls = await evaluate(`([...document.querySelectorAll('[data-zoom]')].map(button => ({
+    slot: button.closest('[data-slot]').dataset.slot, width: Number(button.dataset.zoomWidth),
+    visible: Boolean(button.getClientRects().length) })))`);
+  if (controls.length !== 3) result.failures.push(`Expected three zoom controls, found ${controls.length}`);
+  if (result.width !== 390) {
+    if (controls.some(control => control.visible)) result.failures.push('Zoom controls must be hidden on desktop');
+    return;
+  }
+  result.zoom = [];
+  for (const control of controls) {
+    const before = await evaluate(`(${zoomState.toString()})(${JSON.stringify(control.slot)})`);
+    const focusButton = () => evaluate(`document.querySelector('[data-slot="${control.slot}"] [data-zoom]').focus({ preventScroll: true }); true`);
+    await focusButton();
+    await press('Enter', 13);
+    try {
+      const enlarged = await evaluate(`(${zoomState.toString()})(${JSON.stringify(control.slot)})`);
+      const record = { slot: control.slot, before, enlarged };
+      result.zoom.push(record);
+      if (!control.visible || enlarged.pressed !== 'true' || enlarged.label !== 'Fit image to width' || !enlarged.zoomed ||
+          Math.abs(enlarged.width - control.width) > 1 || enlarged.inlineWidth !== control.width + 'px' ||
+          !(enlarged.scrollWidth > enlarged.clientWidth) || enlarged.tabindex !== '0' || enlarged.role !== 'region' ||
+          enlarged.labelRegion !== 'Enlarged image, scroll sideways' || !(enlarged.width / enlarged.naturalWidth * enlarged.labelPx >= 11)) {
+        result.failures.push(`Zoom did not enlarge accessible raster labels: ${JSON.stringify(record)}`);
+      }
+      record.layout = await evaluate(`(${pageOverflow.toString()})()`);
+      if (record.layout.overflow) result.failures.push(`Zoom caused page overflow: ${control.slot}`);
+      const clip = await evaluate(`(async () => {
+        const frame = document.querySelector('[data-slot="${control.slot}"] .figure-frame');
+        frame.focus({ preventScroll: true });
+        if (document.activeElement !== frame) throw new Error('Zoom region could not receive focus');
+        frame.scrollLeft = 0;
+        const deadline = performance.now() + 5000;
+        let consecutive = 0;
+        while (performance.now() < deadline) {
+          frame.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+          await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+          const box = frame.getBoundingClientRect(), bar = document.querySelector('.topbar').getBoundingClientRect();
+          consecutive = box.top >= bar.bottom && box.bottom <= innerHeight ? consecutive + 1 : 0;
+          if (consecutive === 2) {
+            const height = Math.min(220, box.height), x = Math.max(0, box.left), right = Math.min(innerWidth, box.right);
+            return { x: x + window.scrollX, y: (${JSON.stringify(control.slot)} === 'teaser' ? box.bottom - height : box.top) + window.scrollY,
+              width: right - x, height, scale: 1 };
+          }
+        }
+        throw new Error('Zoom label area did not settle in the viewport');
+      })()`, 10000);
+      const shot = await send('Page.captureScreenshot', { format: 'jpeg', quality: 85, captureBeyondViewport: false, clip });
+      record.screenshot = path.join(output, `zoom-390-${result.theme}-${control.slot}.jpg`);
+      await writeFile(record.screenshot, Buffer.from(shot.data, 'base64'));
+    } finally {
+      await focusButton();
+      await press('Enter', 13);
+      const restored = await evaluate(`(${zoomState.toString()})(${JSON.stringify(control.slot)})`);
+      if (result.zoom.length && result.zoom.at(-1).slot === control.slot) result.zoom.at(-1).restored = restored;
+      if (restored.pressed !== 'false' || restored.label !== 'Zoom to read labels' || restored.zoomed ||
+          restored.inlineWidth !== '' || Math.abs(restored.width - before.width) > 1 || restored.tabindex !== null ||
+          restored.role !== null || restored.labelRegion !== null || restored.scrollWidth > restored.clientWidth + 1) {
+        result.failures.push(`Zoom did not restore the image: ${JSON.stringify(restored)}`);
+      }
+    }
+  }
+}
+
+function mastheadStyleState() {
   const em = document.querySelector('.paper-title em'), glow = document.querySelector('#top .hero-glow');
   const venue = document.querySelector('#venue'), style = getComputedStyle(em), box = venue.getBoundingClientRect();
   const titleRange = document.createRange();
@@ -478,6 +589,14 @@ async function checkWidth(origin, width, height, theme) {
       result.failures.push(`Fonts: ${error.message}`);
     }
     try {
+      await recordMasthead(evaluate, result);
+      if (width === 390 && await evaluate("getComputedStyle(document.querySelector('.venue'), '::before').display") !== 'none') {
+        result.failures.push('Phone venue dot must be hidden');
+      }
+    } catch (error) {
+      result.failures.push(`Masthead: ${error.message}`);
+    }
+    try {
       result.demo = await waitFor(() => evaluate(`(() => {
         if (document.querySelector('.pvhv-demo-fallback')) return 'fallback';
         if (!window.PVHVDemo) return null;
@@ -618,6 +737,12 @@ async function checkWidth(origin, width, height, theme) {
     }
 
     try {
+      await checkZoom(send, evaluate, press, result);
+    } catch (error) {
+      result.failures.push(`Zoom: ${error.message}`);
+    }
+
+    try {
       if (width === 390) await evaluate("document.getElementById('menu-toggle').click(); true");
       try {
         const samples = Object.entries({
@@ -629,7 +754,7 @@ async function checkWidth(origin, width, height, theme) {
           copyButton: '#copy', footer: 'footer p', demoHelp: '.pvhv-demo-help', status: '.pvhv-demo-status',
           legend: '.pvhv-demo legend', radioLabel: '.pvhv-demo-modes label', select: '.pvhv-demo select',
           button: '.pvhv-demo button', captionLabel: '.pvhv-demo-label', attribution: '.pvhv-demo-attrib',
-          attributionLink: '.pvhv-demo-attrib a', busy: '.pvhv-demo-busy', ...(width === 390 ? { menu: '#menu-toggle' } : {})
+          attributionLink: '.pvhv-demo-attrib a', busy: '.pvhv-demo-busy', ...(width === 390 ? { menu: '#menu-toggle', zoomButton: '[data-zoom]' } : {})
         }).map(([name, selector]) => ({ name, selector }));
         samples.push({ name: 'titleStart', selector: '.paper-title em', token: '--accent-a', backgroundToken: '--bg', minimum: 3 },
           { name: 'titleEnd', selector: '.paper-title em', token: '--accent-b', backgroundToken: '--bg', minimum: 3 },
@@ -646,7 +771,7 @@ async function checkWidth(origin, width, height, theme) {
       } finally {
         if (width === 390) await evaluate("if (document.getElementById('menu-toggle').getAttribute('aria-expanded') === 'true') document.getElementById('menu-toggle').click(); true");
       }
-      result.masthead = await evaluate(`(${mastheadState.toString()})()`);
+      result.masthead = { ...result.masthead, ...await evaluate(`(${mastheadStyleState.toString()})()`) };
       if (!['transparent', 'rgba(0, 0, 0, 0)'].includes(result.masthead.fill) || result.masthead.clip !== 'text' || result.masthead.size < 24) {
         result.failures.push('PVHV emphasis must be large gradient text with transparent text fill');
       }
@@ -828,7 +953,13 @@ async function checkVariant(origin, width, height, theme, kind) {
     await waitFor(() => loaded, 30000, `${kind} load at ${width}px in ${theme}`);
     result.theme = await evaluate('document.documentElement.dataset.theme');
     if (result.theme !== theme) result.failures.push(`Expected ${theme}, found ${result.theme}`);
-    if (kind === 'fallback') {
+    if (kind === 'masthead') {
+      await recordMasthead(evaluate, result);
+      const shot = await send('Page.captureScreenshot', { format: 'jpeg', quality: 85, captureBeyondViewport: false,
+        clip: { x: 0, y: 0, width, height, scale: 1 } });
+      result.screenshot = path.join(output, `masthead-1024-${theme}.jpg`);
+      await writeFile(result.screenshot, Buffer.from(shot.data, 'base64'));
+    } else if (kind === 'fallback') {
       await waitFor(() => evaluate("Boolean(document.querySelector('.pvhv-demo-fallback'))"), 30000, 'Fallback notice');
       result.notice = await evaluate(`(() => {
         const box = document.querySelector('.pvhv-demo-fallback'), bounds = box.getBoundingClientRect();
@@ -916,11 +1047,13 @@ async function checkNoScript(origin) {
       return { menuVisible: Boolean(document.getElementById('menu-toggle').getClientRects().length),
         linksVisible: [...nav.querySelectorAll('a')].filter(a => a.getClientRects().length).length,
         themeToggleVisible: Boolean(document.querySelector('.topbar [data-theme-toggle]').getClientRects().length),
+        zoomButtonsVisible: [...document.querySelectorAll('[data-zoom]')].filter(button => button.getClientRects().length).length,
         ...(${pageOverflow.toString()})() };
     })()` });
     Object.assign(result, value.value);
     if (result.menuVisible) result.failures.push('Menu button visible without JavaScript');
     if (result.themeToggleVisible) result.failures.push('Theme toggle visible without JavaScript');
+    if (result.zoomButtonsVisible) result.failures.push('Zoom controls visible without JavaScript');
     if (result.linksVisible !== 5) result.failures.push(`Expected 5 visible section links without JavaScript, found ${result.linksVisible}`);
     if (result.overflow) result.failures.push('Horizontal overflow without JavaScript');
   } catch (error) {
@@ -946,6 +1079,12 @@ try {
       summary.runs.push(result);
       summary.failures.push(...result.failures.map(message => `${width}px ${theme}: ${message}`));
     }
+  }
+  summary.mastheadRuns = [];
+  for (const theme of ['light', 'dark']) {
+    const result = await checkVariant(origin, 1024, 768, theme, 'masthead');
+    summary.mastheadRuns.push(result);
+    summary.failures.push(...result.failures.map(message => `1024px ${theme} masthead: ${message}`));
   }
   summary.noScript = await checkNoScript(origin);
   summary.failures.push(...summary.noScript.failures.map(message => `390px without JavaScript: ${message}`));

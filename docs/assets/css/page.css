@@ -48,6 +48,10 @@ html:not(.js) .tools { display: none; }
   border-radius: var(--radius-l);
 }
 .venue::before { flex: none; }
+@media (max-width: 719.98px) {
+  .venue { justify-content: center; text-align: center; }
+  .venue::before { display: none; }
+}
 .venue a { display: inline-flex; align-items: center; min-height: 44px; min-width: 0; color: inherit; text-decoration-color: currentColor; }
 .reimpl-flag { max-width: 62ch; margin: var(--sp-4) auto 0; color: var(--muted); font-size: var(--fs-sm); }
 
@@ -60,6 +64,10 @@ html:not(.js) .tools { display: none; }
 .note { color: var(--muted); font-size: var(--fs-sm); }
 .section-head .note { margin: 0; }
 .figure figcaption { max-width: none; }
+.zoom-toggle { margin-top: var(--sp-3); }
+.figure-frame.is-zoomed { overflow-x: auto; }
+.figure-frame.is-zoomed > img { max-width: none; }
+@media (min-width: 860px) { .zoom-toggle { display: none; } }
 .panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: var(--sp-5); }
 .panel { min-width: 0; max-width: 480px; width: 100%; justify-self: center; }
 .panel img { width: 100%; border: 1px solid var(--line); border-radius: var(--radius-s); background: #fff; }

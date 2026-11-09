@@ -619,6 +619,58 @@ def check_masthead(page, facts):
     return "hero glow, large PVHV emphasis, one complete publication pill and exact re-implementation flag present"
 
 
+def check_no_logos(page):
+    top = page.by_id("top")
+    nodes = list(top.descendants())
+    require(not any(node.tag == "img" for node in nodes), "masthead must contain no image elements")
+    require(not any("logo" in (node.attrs.get("class") or "").lower() for node in page.nodes()),
+            "page must contain no element with a logo class")
+    require(not any("logo" in (node.attrs.get(attr) or "").lower()
+                    for node in page.nodes() if node.tag in {"img", "source"}
+                    for attr in ("src", "srcset")), "page image sources must contain no logo references")
+    bylines = [node for node in nodes if node.has_class("byline")]
+    resources = [node for node in nodes if node.has_class("paper-links")]
+    parent = next((node for node in [top, *nodes] if bylines and bylines[0] in node.children), None)
+    siblings = [node for node in parent.children if isinstance(node, Node)] if parent else []
+    require(len(bylines) == len(resources) == 1
+            and siblings.index(bylines[0]) + 1 < len(siblings)
+            and siblings[siblings.index(bylines[0]) + 1] is resources[0],
+            "masthead byline must be followed directly by the resource row")
+    require(not any(path.is_file() and "logo" in path.name.lower()
+                    for path in (DOCS / "assets/img").rglob("*")), "image assets must contain no logo files")
+    require(not re.search(r"\.logo", (DOCS / "assets/css/page.css").read_text(encoding="utf-8"), re.I),
+            "page CSS must contain no logo selectors")
+    return "masthead has no logo row or logo image; byline is followed directly by the resource row; no logo files or styles"
+
+
+def check_zoom(page):
+    expected = {"teaser": (960, 24), "results-keep-cull": (1560, 15), "results-comparison": (1560, 15)}
+    buttons = [node for node in page.nodes() if "data-zoom" in node.attrs]
+    require(len(buttons) == 3, "expected exactly three raster zoom buttons")
+    for slot in (node for node in page.nodes() if "data-slot" in node.attrs):
+        name = slot.attrs["data-slot"]
+        controls = [node for node in slot.descendants() if "data-zoom" in node.attrs]
+        require(len(controls) == (1 if name in expected else 0), f"{name}: unexpected zoom controls")
+        if name not in expected:
+            continue
+        button = controls[0]
+        require(button.tag == "button" and button.attrs.get("type") == "button"
+                and "hidden" in button.attrs and button.attrs.get("aria-pressed") == "false"
+                and button.has_class("zoom-toggle"), f"{name}: zoom must start hidden and unpressed")
+        equal(button.text(), "Zoom to read labels", f"{name} zoom label")
+        width, label = expected[name]
+        equal((int(button.attrs.get("data-zoom-width", "0")), int(button.attrs.get("data-label-px", "0"))),
+              (width, label), f"{name} zoom scale")
+        children = [node for node in slot.children if isinstance(node, Node)]
+        index = children.index(button)
+        require(index > 0 and index + 1 < len(children) and children[index - 1].has_class("figure-frame")
+                and children[index + 1].tag == "figcaption", f"{name}: zoom button must follow frame before caption")
+        image = next(node for node in children[index - 1].descendants() if node.tag == "img")
+        natural_width = image_size(DOCS / image.attrs["src"])[0]
+        require(width / natural_width * label >= 11, f"{name}: enlarged raster labels fall below 11 CSS px")
+    return "only the three raster figures have progressive zoom controls; labels reach at least 11 CSS px"
+
+
 def check_style_files():
     require(not (DOCS / "assets/fonts").exists(), "obsolete bundled fonts directory remains")
     files = site_files()
@@ -635,6 +687,11 @@ def check_style_files():
     demo = (DOCS / "assets/js/demo.js").read_text(encoding="utf-8")
     require(not re.search(r"#[0-9a-fA-F]{3,8}\b|\brgba?\(", demo), "demo CSS contains raw colours")
     require(not re.search(r"var\(\s*--[\w-]+\s*,", demo), "demo CSS contains token fallbacks")
+    demo_readme = (DOCS.parent / "demo/README.md").read_text(encoding="utf-8")
+    used_demo_tokens = set(re.findall(r"var\(\s*(--[\w-]+)", demo))
+    documented_tokens = set(re.findall(r"--[\w-]+", demo_readme))
+    require(used_demo_tokens <= documented_tokens,
+            f"demo README lacks host tokens: {sorted(used_demo_tokens - documented_tokens)}")
     page_css = (DOCS / "assets/css/page.css").read_text(encoding="utf-8")
     require(all(value == "#fff" for value in re.findall(r"#[0-9a-fA-F]+\b", page_css)),
             "page CSS raw hex colours are limited to the white SVG mat")
@@ -695,6 +752,8 @@ def main():
         ("reimplementation", lambda: check_note(page)),
         ("kit", lambda: check_kit(page, args.kit)),
         ("masthead", lambda: check_masthead(page, facts)),
+        ("no-logos", lambda: check_no_logos(page)),
+        ("zoom", lambda: check_zoom(page)),
         ("style-files", check_style_files),
         ("contrast", check_contrast),
         ("leftovers", check_leftovers),

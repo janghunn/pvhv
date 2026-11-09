@@ -46,6 +46,29 @@
     layout();
   }
 
+  const zoomDesktop = window.matchMedia('(min-width: 860px)');
+  document.querySelectorAll('[data-zoom]').forEach(button => {
+    const frame = button.previousElementSibling;
+    const image = frame.querySelector('img');
+    const setZoom = zoomed => {
+      button.setAttribute('aria-pressed', String(zoomed));
+      button.textContent = zoomed ? 'Fit image to width' : 'Zoom to read labels';
+      frame.classList.toggle('is-zoomed', zoomed);
+      image.style.width = zoomed ? button.dataset.zoomWidth + 'px' : '';
+      if (zoomed) {
+        frame.setAttribute('tabindex', '0');
+        frame.setAttribute('role', 'region');
+        frame.setAttribute('aria-label', 'Enlarged image, scroll sideways');
+      } else {
+        for (const name of ['tabindex', 'role', 'aria-label']) frame.removeAttribute(name);
+        frame.scrollLeft = 0;
+      }
+    };
+    button.hidden = false;
+    button.addEventListener('click', () => setZoom(button.getAttribute('aria-pressed') !== 'true'));
+    zoomDesktop.addEventListener('change', () => { if (zoomDesktop.matches) setZoom(false); });
+  });
+
   const copy = document.getElementById('copy');
   const citation = document.getElementById('citation');
   const status = document.getElementById('copy-status');
