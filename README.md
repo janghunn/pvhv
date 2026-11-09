@@ -120,4 +120,4 @@ keywords = {potentially visible hidden volume, visibility, multi-fragment render
 
 ## Licence
 
-MIT, © 2026 Janghun Kim; see [LICENSE](LICENSE). Models retain their own licences as listed above. The bundled Lato fonts use the [SIL Open Font License 1.1](docs/assets/fonts/OFL-Lato.txt).
+MIT, © 2026 Janghun Kim; see [LICENSE](LICENSE). Models retain their own licences as listed above.
