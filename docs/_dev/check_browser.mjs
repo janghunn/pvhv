@@ -387,6 +387,26 @@ async function recordMasthead(evaluate, result) {
   if (!state.inViewport) result.failures.push('Masthead venue, authors, affiliation and resource row must be in the first viewport');
 }
 
+// Desktop masthead layout: one button row, a short title, the venue line under the title block.
+function mastheadLayoutState() {
+  const top = document.querySelector('#top'), box = top.getBoundingClientRect();
+  const titleBlock = top.querySelector('.title-block').getBoundingClientRect();
+  const brandBlock = top.querySelector('.brand-block').getBoundingClientRect();
+  const buttonTops = [...top.querySelectorAll('.paper-links a')].map(link => link.getBoundingClientRect().top);
+  const range = document.createRange();
+  range.selectNodeContents(top.querySelector('#title'));
+  const lineTops = [];
+  for (const rect of range.getClientRects()) {
+    if (rect.width > 0 && rect.height > 0 && !lineTops.some(lineTop => Math.abs(lineTop - rect.top) <= 2)) lineTops.push(rect.top);
+  }
+  const inside = bounds => bounds.left >= box.left - 1 && bounds.right <= box.right + 1 &&
+    bounds.top >= box.top - 1 && bounds.bottom <= box.bottom + 1;
+  return { buttons: buttonTops.length, buttonSpread: Math.max(...buttonTops) - Math.min(...buttonTops), titleLines: lineTops.length,
+    titleLeft: titleBlock.left, venueLeft: brandBlock.left, venueGap: brandBlock.top - titleBlock.bottom,
+    inside: inside(titleBlock) && inside(brandBlock), scrollWidth: document.scrollingElement.scrollWidth, innerWidth,
+    clip: { x: box.left + scrollX, y: box.top + scrollY, width: box.width, height: box.height } };
+}
+
 function zoomState(slot) {
   const figure = document.querySelector('[data-slot="' + slot + '"]');
   const button = figure.querySelector('[data-zoom]'), frame = figure.querySelector('.figure-frame');
@@ -1099,9 +1119,16 @@ async function checkVariant(origin, width, height, theme, kind, lang = 'en') {
     if (await evaluate('document.documentElement.lang') !== lang) result.failures.push(`Expected html[lang=${lang}]`);
     if (kind === 'masthead') {
       await recordMasthead(evaluate, result);
-      const shot = await send('Page.captureScreenshot', { format: 'jpeg', quality: 85, captureBeyondViewport: false,
-        clip: { x: 0, y: 0, width, height, scale: 1 } });
-      result.screenshot = path.join(output, `masthead-1024-${theme}.jpg`);
+      const state = result.mastheadLayout = await evaluate(`(${mastheadLayoutState.toString()})()`);
+      if (state.buttons !== 4 || state.buttonSpread > 1) result.failures.push(`Resource buttons must share one row: ${state.buttons} buttons, tops spread ${state.buttonSpread}px`);
+      if (state.titleLines < 1 || state.titleLines > 3) result.failures.push(`Title must wrap to at most 3 lines, found ${state.titleLines}`);
+      if (Math.abs(state.venueLeft - state.titleLeft) > 2) result.failures.push(`Venue left edge ${state.venueLeft}px must match the title block's ${state.titleLeft}px`);
+      if (!(state.venueGap > 0 && state.venueGap <= 48)) result.failures.push(`Venue must sit at most 48px below the title block, gap ${state.venueGap}px`);
+      if (!state.inside) result.failures.push('Title block and venue must lie inside #top');
+      if (state.scrollWidth > state.innerWidth) result.failures.push(`Horizontal overflow: scrollWidth ${state.scrollWidth} > ${state.innerWidth}`);
+      const shot = await send('Page.captureScreenshot', { format: 'jpeg', quality: 85, captureBeyondViewport: true,
+        clip: { ...state.clip, scale: 1 } });
+      result.screenshot = path.join(output, `masthead-${width}-${theme}-${lang}.jpg`);
       await writeFile(result.screenshot, Buffer.from(shot.data, 'base64'));
     } else if (kind === 'fallback') {
       await waitFor(() => evaluate("Boolean(document.querySelector('.pvhv-demo-fallback'))"), 30000, 'Fallback notice');
@@ -1371,10 +1398,14 @@ try {
   summary.languageSwitch = await checkVariant(origin, 1440, 900, 'light', 'switch');
   summary.failures.push(...summary.languageSwitch.failures.map(message => `1440px light language switch: ${message}`));
   summary.mastheadRuns = [];
-  for (const theme of ['light', 'dark']) {
-    const result = await checkVariant(origin, 1024, 768, theme, 'masthead');
-    summary.mastheadRuns.push(result);
-    summary.failures.push(...result.failures.map(message => `1024px ${theme} masthead: ${message}`));
+  for (const [width, height] of [[1440, 900], [1024, 768]]) {
+    for (const theme of ['light', 'dark']) {
+      for (const lang of ['en', 'ko']) {
+        const result = await checkVariant(origin, width, height, theme, 'masthead', lang);
+        summary.mastheadRuns.push(result);
+        summary.failures.push(...result.failures.map(message => `${width}px ${theme} ${lang} masthead: ${message}`));
+      }
+    }
   }
   summary.menuHistory = await checkMenuHistory(origin);
   summary.failures.push(...summary.menuHistory.failures.map(message => `390px menu history: ${message}`));
