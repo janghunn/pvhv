@@ -28,6 +28,7 @@ REIMPLEMENTATION_LABEL = "Re-implementation (2026), not the code used for the pa
 METHOD_PROVENANCE = ("Diagrams drawn for this page after Figs. 2 and 3 and Sec. 4 of the paper "
                      "(Kim and Lee, ACM TOG 42(4), 2023); schematic, not to scale.")
 MIN_PANEL_PX = 300   # narrowest method panel the auto-fit grid produces (minmax(300px, 1fr))
+DEMO_NOTICE = "The interactive demo needs JavaScript and WebGL2 with float render targets."
 MIN_LABEL_PX = 11
 VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
 
@@ -134,8 +135,9 @@ def check_navigation(page, facts):
         ("BibTeX", "#bibtex"),
     ]
     equal([(node.text().strip(), node.attrs.get("href")) for node in anchors], expected, "resource buttons")
-    require(all(node.has_class("btn") and node.has_class("btn-pill") for node in anchors),
-            "each resource must be a kit link pill")
+    require(all(node.has_class("btn") for node in anchors),
+            "each resource must be a kit button")
+    require(anchors[0].has_class("primary"), "Paper must be the primary resource")
     equal(anchors[1].attrs.get("title"), "PDF from the ACM Digital Library (open access)", "PDF title")
     for node in anchors[:3]:
         require(node.attrs.get("target") == "_blank"
@@ -224,7 +226,20 @@ def check_sources(args, facts, page):
     return "; ".join(checked) or "no optional source files supplied"
 
 
+def check_demo_notice(page):
+    boxes = [node for node in page.nodes() if node.has_class("slot-box")]
+    require(len(boxes) == 1, "expected exactly one no-JavaScript demo notice")
+    box = boxes[0]
+    require(box in page.by_id("demo-root").children and box.attrs.get("role") == "note",
+            "demo no-JavaScript notice must be a direct child with role=note")
+    children = [node for node in box.children if isinstance(node, Node)]
+    require(len(children) == 1 and children[0].tag == "p", "demo notice must contain one paragraph")
+    equal(box.text(), DEMO_NOTICE, "demo no-JavaScript notice")
+    require(re.search(r"[가-힣]", children[0].attrs.get("data-ko") or ""), "demo notice needs Korean text")
+
+
 def check_slots(page):
+    check_demo_notice(page)
     slots = [node for node in page.nodes() if "data-slot" in node.attrs]
     names = [node.attrs["data-slot"] for node in slots]
     equal(set(names), REQUIRED_SLOTS, "required HTML slots")
@@ -255,8 +270,7 @@ def check_slots(page):
             equal(captions[0].text().strip(), rows[name][3], f"{name} caption")
         boxes = [node for node in descendants if node.has_class("slot-box")]
         if boxes:
-            require(all(node.attrs.get("role") == "img" and (node.attrs.get("aria-label") or "").strip()
-                        for node in boxes), f"{name}: placeholder needs role=img and aria-label")
+            require(name == "demo", f"{name}: unexpected placeholder")
         elif name == "demo":
             require(descendants, "demo: empty mount point")
         else:
@@ -311,6 +325,7 @@ def image_size(path):
 
 
 def check_slots_filled(page):
+    check_demo_notice(page)
     demo_nodes = set(page.by_id("demo-root").descendants())
     require(not any(node.has_class("slot-box") and node not in demo_nodes for node in page.nodes()),
             "slot-box outside #demo-root")
@@ -329,7 +344,7 @@ def check_slots_filled(page):
             require(ratio[0] * dimensions[1] == ratio[1] * dimensions[0],
                     f"{name}: aspect {aspect} does not match {dimensions[0]}x{dimensions[1]}")
     return ("all figure images exist in data-src order with exact dimensions and declared aspects; "
-            "only the runtime demo placeholder remains")
+            "only the no-JavaScript demo notice remains")
 
 
 def svg_label_sizes(path):
@@ -499,14 +514,13 @@ def palettes():
     blocks = [re.search(pattern, source) for pattern in (
         r":root\s*\{([^}]+)\}",
         r':root\[data-theme="dark"\]\s*\{([^}]+)\}',
-        r"@media\s*\(prefers-color-scheme: dark\)\s*\{\s*:root:not\(\[data-theme\]\)\s*\{([^}]+)\}",
     )]
-    require(all(blocks), "tokens must define light, dark and OS dark palettes")
-    light, dark, media = [block.group(1) for block in blocks]
-    for block, expected in ((light, "light"), (dark, "dark"), (media, "dark")):
-        scheme = re.search(r"color-scheme\s*:\s*([^;]+);", block)
+    require(all(blocks), "tokens must define light and dark palettes")
+    for block, expected in zip(blocks, ("light", "dark")):
+        scheme = re.search(r"color-scheme\s*:\s*([^;]+);", block.group(1))
         require(scheme and scheme.group(1).strip() == expected, f"palette must declare color-scheme: {expected}")
-    return declarations(light), declarations(dark), declarations(media)
+    light, dark = [declarations(block.group(1)) for block in blocks]
+    return light, {**light, **dark}
 
 
 def colour(value):
@@ -527,96 +541,134 @@ def luminance(channels):
 
 
 def check_contrast():
-    light, dark, media = palettes()
-    require(dark.keys() <= light.keys(), "dark palette defines a key absent from light")
-    palette_roles = set("bg bg2 card line line-strong fg muted accent-a accent-b accent-c warn on-accent "
-                        "btn-bg btn-fg code-bg code-fg focus selection glow-a glow-b glow-opacity grid-dot "
-                        "tint shadow-1 shadow-2".split())
-    require(dark.keys() <= palette_roles, "dark block must override palette roles only")
-    equal(media, dark, "OS dark and explicit dark palettes")
-    pairs = [(fg, bg, 4.5) for fg in ("fg", "muted", "accent-a", "accent-b", "accent-c")
-             for bg in ("bg", "bg2", "card")]
-    pairs += [("btn-fg", "btn-bg", 4.5), ("code-fg", "code-bg", 4.5), ("muted", "code-bg", 4.5)]
-    pairs += [(fg, bg, 3.0) for fg in ("line-strong", "focus") for bg in ("bg", "bg2", "card")]
-    required = {role for fg, bg, _ in pairs for role in (fg, bg)} | {"glow-a", "glow-b", "glow-opacity"}
-    require(required <= dark.keys(), "dark block lacks a tested palette role")
+    light, dark = palettes()
+    pairs = [(fg, bg, 4.5) for fg in ("ink", "muted") for bg in ("bg", "surface", "code-bg")]
+    pairs += [("accent", bg, 4.5) for bg in ("bg", "surface")]
+    pairs += [("on-accent", "accent", 4.5), ("on-band", "band", 4.5)]
+    pairs += [(fg, bg, 3.0) for fg in ("control", "focus", "accent") for bg in ("bg", "surface")]
     failures = []
     for theme, tokens in (("light", light), ("dark", dark)):
-        def measure(fg, bg, minimum, label):
-            first, second = sorted([luminance(fg), luminance(bg)])
+        for fg, bg, minimum in pairs:
+            first, second = sorted([luminance(colour(tokens[fg])), luminance(colour(tokens[bg]))])
             ratio = (second + .05) / (first + .05)
-            print(f"{'OK' if ratio >= minimum else 'FAIL'} contrast.{theme}.{label}: "
+            print(f"{'OK' if ratio >= minimum else 'FAIL'} contrast.{theme}.{fg}/{bg}: "
                   f"{ratio:.2f}:1 (minimum {minimum:.1f}:1)")
             if ratio < minimum:
-                failures.append(f"{theme}.{label}")
-        for fg, bg, minimum in pairs:
-            measure(colour(tokens[fg]), colour(tokens[bg]), minimum, f"{fg}/{bg}")
-        for glow in ("glow-a", "glow-b"):
-            wash, bg = colour(tokens[glow]), colour(tokens["bg"])
-            alpha = wash[3] * float(tokens["glow-opacity"]) * .7
-            back = [wash[index] * alpha + bg[index] * (1 - alpha) for index in range(3)]
-            for fg in ("fg", "muted", "accent-c"):
-                measure(colour(tokens[fg]), back, 4.5, f"{fg}/{glow}")
-        for accent, low, high in (("accent-b", 90, 170), ("accent-a", 0, 60)):
-            hue = colorsys.rgb_to_hls(*colour(tokens[accent])[:3])[0] * 360
-            require(low <= hue <= high, f"{theme}.{accent} hue {hue:.1f} outside {low}-{high}")
-            print(f"OK {theme}.{accent}-hue: {hue:.1f} degrees ({low}-{high})")
+                failures.append(f"{theme}.{fg}/{bg}")
+        hue = colorsys.rgb_to_hls(*colour(tokens["accent"])[:3])[0] * 360
+        require(80 <= hue <= 150, f"{theme}.accent hue {hue:.1f} outside 80-150")
+        print(f"OK {theme}.accent-hue: {hue:.1f} degrees (80-150)")
     require(not failures, "contrast below threshold: " + ", ".join(failures))
-    return "both palettes and masthead glows meet AA; control borders and focus meet 3:1; accent hues match the kit"
+    return "both Paper & Lamp palettes meet AA for page text; controls and focus meet 3:1; accent is pine green"
 
 
 def check_kit(page, kit):
+    # Kit revision 208aa74; only the two accent blocks differ in this project.
     pins = {
-        "assets/css/tokens.css": "f5311c5bd69ade3fa5a30a2981d8858a21a3edaf3cf978ea7cd874735b195e1d",
-        "assets/css/base.css": "6767a81361a610685cc3276dc43b1c6e8397f91897058f4c3a5cab595613594c",
-        "assets/js/kit.js": "47c025656f00148bb58235d6d6172b1303021d3d7d7fcaddc380c211e3a3157f",
+        "assets/css/base.css": "858e7596fd4b392a0fb55ebd01e1b29c73dd5dc1a58e0f3ad8fff4c466ff6a8e",
+        "assets/css/components.css": "3ed8014941e4e8218e62746bf6fc15fcce40972c97dc14d75b3311f62cc43a9e",
+        "assets/css/accents.css": "502dc3dc7fb3f0debb0764bb1711410ed057a35daf4689efde7d8fa13ae170f1",
+        "assets/js/kit.js": "7bed21735f2833fbbd2c261c5460e6ac5f1c85945f5995efae9326cb10838b1d",
+        "assets/fonts/LICENSE-S-Core-Dream.png": "6b706afa8929b2b63b46276ac862da5ab7a3f79da1256b73057cd6f50baf2257",
+        "assets/fonts/LICENSE-S-Core-Dream.txt": "f7513c3c137e13393bc87110670b9b2cec8e0e9d3ff57ad4f8fa06122b2dc2f8",
+        "assets/fonts/Lato-400.woff2": "277c2401b516d71dbd053a084246260194d8f22939fb7b63e99b1e6fb28a249b",
+        "assets/fonts/Lato-600.woff2": "391e7f9587ae937e5edf4c5d71f8f4f561d28165500e056c45fd952eade36c8e",
+        "assets/fonts/Lato-700.woff2": "30c9de7848e9d05f432bff7fef4920486ac3ed0708ecd40f3a14cc6049ca9af2",
+        "assets/fonts/Lato-900.woff2": "17571df6ac98e36ad8f4af4739fe63f8225ad244e016d0c8b81f9f4e4f52d6dc",
+        "assets/fonts/OFL-Lato.txt": "d9f3a36641a31c7a69dec329b119bb9c80542cfe6eec356008c81c0416f5b5cd",
+        "assets/fonts/SCDream4.otf": "1dc288e8cfdf96eb083c0b016fb5f107bc83208e748b6a61422404b9e42a95a4",
+        "assets/fonts/SCDream6.otf": "7dd3e0240002feedd37d0f33033a44e17b1ab11f84a93acf8482184adc33aa1a",
+        "assets/fonts/SHA256SUMS": "7505e09c87e723fe2907ee6f80f0feeb44aaf6cda22a026f9fd50acae1c6dec3",
+        "assets/fonts/fonts.css": "3248dd0d49b3246c4a63fe13e6558c6b742c834162e3ce4c22f38bd02150d6b5",
     }
     for name, digest in pins.items():
         data = (DOCS / name).read_bytes()
         equal(hashlib.sha256(data).hexdigest(), digest, f"kit hash/{name}")
         if kit:
-            equal(data, (kit / Path(name).name).read_bytes(), f"kit bytes/{name}")
+            equal(data, (kit / name).read_bytes(), f"kit bytes/{name}")
+    fonts = DOCS / "assets/fonts"
+    for line in (fonts / "SHA256SUMS").read_text(encoding="utf-8").splitlines():
+        digest, name = line.split()
+        equal(hashlib.sha256((fonts / name).read_bytes()).hexdigest(), digest, f"font checksum/{name}")
+    tokens = (DOCS / "assets/css/tokens.css").read_text(encoding="utf-8")
+    equal(hashlib.sha256(tokens.encode()).hexdigest(), "511c4ae16e7347da498556c0b75a6e2fc1374ae914b9644063cbf8e88069dba5", "pine tokens hash")
+    if kit:
+        expected = (kit / "assets/css/tokens.css").read_text(encoding="utf-8")
+        accents = (kit / "assets/css/accents.css").read_text(encoding="utf-8")
+        pine = re.findall(r'^.*?\[data-accent="pine"\]\{([^}]+)\}', accents, re.M)
+        require(len(pine) == 2, "kit must define both pine palettes")
+        for block, values in zip(("ACCENT", "ACCENT-DARK"), pine):
+            roles = declarations(values)
+            pattern = rf"(/\* === {block}:.*?\*/)(.*?)(/\* === /{block} === \*/)"
+            def set_values(match):
+                body = re.sub(r"--([\w-]+):([^;]+);", lambda m: "--" + m[1] + ":" + roles[m[1]] + ";", match[2])
+                return match[1] + body + match[3]
+            expected = re.sub(pattern, set_values, expected, flags=re.S)
+        equal(tokens, expected, "kit tokens with pine accent blocks")
     html = next(node for node in page.nodes() if node.tag == "html")
-    require(html.attrs.get("data-theme-default") == "light" and html.attrs.get("data-theme") == "light",
-            "paper must declare light as its initial theme and default")
+    require(html.attrs.get("lang") == "en" and not any(key.startswith("data-theme") for key in html.attrs),
+            "paper must start in English without data-theme attributes")
     head = next(node for node in page.nodes() if node.tag == "head")
     children = [node for node in head.children if isinstance(node, Node)]
-    require(len(children) >= 2 and children[0].tag == "meta" and "charset" in children[0].attrs
-            and children[1].tag == "script" and children[1].attrs == {"data-ppk-variant": "light"},
-            "the classic pre-paint light script must immediately follow the charset")
+    require(len(children) >= 2 and children[0].tag == "meta" and children[0].attrs == {"charset": "utf-8"}
+            and children[1].tag == "script" and not children[1].attrs,
+            "the kit pre-paint script must immediately follow the charset")
     equal(hashlib.sha256(children[1].text().encode()).hexdigest(),
-          "f75861806c94a78e5ee35c96dc0fe9610075d7692aeeb9b6fd1c09f81d12e3d3", "pre-paint script hash")
-    require(sum("data-theme-toggle" in node.attrs for node in page.nodes()) == 1, "expected one theme toggle")
-    return "kit assets and pre-paint script match pinned hashes; light shell and single theme toggle present"
+          "8ee7c3efad15f477b10620ee1a9407a2808536d5aa0ce1e990ae605c42da4f27", "pre-paint script hash")
+    if kit:
+        template = (kit / "project.html").read_text(encoding="utf-8")
+        equal(children[1].text(), re.search(r"<script>(.*?)</script>", template, re.S)[1], "kit pre-paint script")
+    for attr in ("data-theme-toggle", "data-lang-toggle"):
+        require(sum(node.tag == "button" and attr in node.attrs for node in page.nodes()) == 1,
+                f"expected one button[{attr}]")
+    require(any(node.tag == "p" and "data-ko-only" in node.attrs and "hidden" in node.attrs
+                and node.attrs.get("lang") == "ko"
+                and node.text() == "이 페이지에는 에스코어가 제공한 에스코어 드림 폰트가 적용되어 있습니다."
+                for node in page.nodes()), "exact Korean font credit missing")
+    equal([node.attrs.get("href") for node in children if node.tag == "link" and node.attrs.get("rel") == "stylesheet"],
+          [f"assets/css/{name}.css" for name in ("tokens", "accents", "base", "components", "site")], "stylesheet order")
+    scripts = [node for node in children if node.tag == "script" and "src" in node.attrs]
+    equal([node.attrs["src"] for node in scripts], [f"assets/js/{name}.js" for name in ("kit", "main", "demo")], "script order")
+    require(all("defer" in node.attrs for node in scripts), "external scripts must be deferred")
+    return "Paper & Lamp assets match the kit (pine accent); kit pre-paint script, theme and language toggles and Korean font credit present"
 
 
 def check_masthead(page, facts):
     top = page.by_id("top")
+    require(top.has_class("masthead"), "#top must be a kit masthead")
     nodes = list(top.descendants())
-    require(any(node.has_class("hero-glow") for node in nodes), "masthead needs its hero glow")
-    headings = [node for node in nodes if node.tag == "h1"]
-    emphasis = [node for node in page.nodes() if node.tag == "em"]
-    require(len(headings) == 1 and len(emphasis) == 1 and emphasis[0] in set(headings[0].descendants())
-            and emphasis[0].text() == "PVHV", "only h1 may hold the PVHV emphasis")
+    headings = [node for node in page.nodes() if node.tag == "h1"]
+    require(len(headings) == 1 and headings[0] in nodes, "masthead must hold the one h1")
+    title_nodes = [headings[0], *headings[0].descendants()]
+    brands = [node for node in title_nodes if node.has_class("t-brand")]
+    require(len(brands) == 1 and brands[0].text() == "PVHV", "h1 must hold one PVHV brand")
+    require(page.by_id("title") in title_nodes and page.by_id("title").has_class("t-sub"), "title must be the kit subtitle")
+    require(all("data-ko" not in node.attrs and "data-html" not in node.attrs
+                for node in [*title_nodes, page.by_id("authors")]), "title and author names must stay English")
     badges = [node for node in page.nodes() if node.has_class("venue")]
-    require(len(badges) == 1 and badges[0] in nodes, "expected one venue pill in the masthead")
+    brands = [node for node in nodes if node.has_class("brand-block")]
+    require(len(badges) == len(brands) == 1 and badges[0] in list(brands[0].descendants()),
+            "expected one venue line in the masthead brand block")
     def visible_text(node):
-        if node.has_class("vh") or node.attrs.get("aria-hidden") == "true" or "hidden" in node.attrs:
+        if node.has_class("vh") or node.has_class("visually-hidden") or node.attrs.get("aria-hidden") == "true" or "hidden" in node.attrs:
             return ""
         return "".join(visible_text(child) if isinstance(child, Node) else child for child in node.children)
-    equal(visible_text(badges[0]), facts["venue"], "visible venue pill")
-    require(page.by_id("venue") in set(badges[0].descendants()), "venue fact must sit inside the single pill")
+    equal(visible_text(badges[0]), facts["venue"], "visible venue line")
+    equal(page.by_id("venue").attrs.get("data-ko"),
+          "ACM Transactions on Graphics 42(4), Article 86, 2023년 8월 (SIGGRAPH 2023)", "Korean venue line")
+    require(page.by_id("venue") in set(badges[0].descendants()), "venue fact must sit inside the single venue line")
     require(all(phrase in facts["venue"] for phrase in ("ACM Transactions on Graphics 42(4)", "SIGGRAPH 2023")),
             "venue must name both journal and proceedings as one publication")
-    require(not any(node is not badges[0] and any(node.has_class(name) for name in ("venue", "eyebrow", "chip"))
-                    for node in nodes), "unexpected masthead badge")
+    require(not any(any(node.has_class(name) for name in ("hero-glow", "org-logo", "mascot", "ph"))
+                    for node in page.nodes()), "obsolete masthead decoration or placeholders")
     flags = [node for node in nodes if node.has_class("reimpl-flag")]
     require(len(flags) == 1, "expected one re-implementation flag")
     equal(flags[0].text(), "Code, figures and demo on this page: independent 2026 re-implementation — details.",
           "re-implementation flag")
     require(any(node.tag == "a" and node.attrs.get("href") == "#reimplementation"
                 for node in flags[0].descendants()), "flag must link to the re-implementation note")
-    return "hero glow, large PVHV emphasis, one complete publication pill and exact re-implementation flag present"
+    require("재구현" in (flags[0].attrs.get("data-ko") or ""), "flag needs Korean re-implementation text")
+    return "PVHV brand title, one complete venue line in the brand block, exact re-implementation flag; no placeholders"
 
 
 def check_no_logos(page):
@@ -638,7 +690,7 @@ def check_no_logos(page):
             "masthead byline must be followed directly by the resource row")
     require(not any(path.is_file() and "logo" in path.name.lower()
                     for path in (DOCS / "assets/img").rglob("*")), "image assets must contain no logo files")
-    require(not re.search(r"\.logo", (DOCS / "assets/css/page.css").read_text(encoding="utf-8"), re.I),
+    require(not re.search(r"\.logo", (DOCS / "assets/css/site.css").read_text(encoding="utf-8"), re.I),
             "page CSS must contain no logo selectors")
     return "masthead has no logo row or logo image; byline is followed directly by the resource row; no logo files or styles"
 
@@ -671,42 +723,88 @@ def check_zoom(page):
     return "only the three raster figures have progressive zoom controls; labels reach at least 11 CSS px"
 
 
+def check_i18n(page):
+    nodes = page.nodes()
+    for node in nodes:
+        for attr in ("data-ko", "data-ko-label", "data-ko-title", "data-ko-alt"):
+            if attr in node.attrs:
+                require(re.search(r"[가-힣]", node.attrs[attr] or ""), f"{node.tag}[{attr}] needs nonempty Korean text")
+        if node.tag == "img":
+            require("data-ko-alt" in node.attrs, f"{node.attrs.get('src')}: missing data-ko-alt")
+        if "aria-label" in node.attrs:
+            require("data-ko-label" in node.attrs, f"{node.tag}: missing data-ko-label")
+        if "title" in node.attrs:
+            require("data-ko-title" in node.attrs, f"{node.tag}: missing data-ko-title")
+    required = set()
+    for node in nodes:
+        if node.tag == "nav":
+            required.update(n for n in node.descendants() if n.tag == "a" and n.text() != "BibTeX")
+        if node.tag in {"figcaption", "li"} or node.has_class("panel-cap") or (node.tag == "h2" and node.text() != "BibTeX"):
+            required.add(node)
+        if node.has_class("band") or node.attrs.get("id") == "reimplementation" or node.tag == "footer":
+            required.update(n for n in node.descendants() if n.tag == "p" and "data-ko-only" not in n.attrs)
+        if "data-zoom" in node.attrs:
+            parent = next(n for n in nodes if node in n.children)
+            required.update(n for n in parent.children if isinstance(n, Node) and n.tag == "figcaption")
+    for node in required:
+        require("data-ko" in node.attrs, f"{node.tag} {node.text()[:60]!r}: missing data-ko")
+    abstract = page.by_id("abstract-text")
+    require(abstract.attrs.get("lang") == "en" and "data-ko" not in abstract.attrs, "abstract must stay English")
+    korean = [node for node in page.by_id("abstract").descendants()
+              if node.tag == "p" and "data-ko-only" in node.attrs and "hidden" in node.attrs and node.attrs.get("lang") == "ko"]
+    require(any(node.has_class("note") and "번역" in node.text() for node in korean), "Korean abstract needs a translation note")
+    require(any(not node.has_class("note") and re.search(r"[가-힣]", node.text()) for node in korean), "Korean abstract missing")
+    untranslated = [page.by_id("authors"), page.by_id("citation"), next(n for n in nodes if n.tag == "h1")]
+    for node in untranslated:
+        require(all("data-ko" not in n.attrs and "data-html" not in n.attrs for n in [node, *node.descendants()]),
+                "title, authors and BibTeX must stay English")
+    return "every page string has a Korean counterpart; title, authors, abstract and BibTeX stay English; Korean abstract labelled as a translation"
+
+
 def check_style_files():
-    require(not (DOCS / "assets/fonts").exists(), "obsolete bundled fonts directory remains")
-    files = site_files()
-    readme = DOCS.parent / "README.md"
-    for path in [*files, readme]:
-        require(not re.search(r"Lato", path.read_text(encoding="utf-8"), re.I),
-                f"obsolete font reference in {path.relative_to(DOCS.parent)}")
+    fonts = DOCS / "assets/fonts"
+    expected_fonts = {"Lato-400.woff2", "Lato-600.woff2", "Lato-700.woff2", "Lato-900.woff2",
+                      "SCDream4.otf", "SCDream6.otf", "OFL-Lato.txt", "LICENSE-S-Core-Dream.txt",
+                      "LICENSE-S-Core-Dream.png", "SHA256SUMS", "fonts.css"}
+    require(fonts.is_dir(), "bundled fonts directory missing")
+    equal({path.name for path in fonts.iterdir()}, expected_fonts, "bundled font files")
+    font_css = (fonts / "fonts.css").read_text(encoding="utf-8")
+    urls = re.findall(r"url\(['\"]?([^'\")]+)", font_css)
+    require(urls and all((fonts / url).is_file() and (fonts / url).resolve().is_relative_to(fonts)
+                         for url in urls), "fonts.css must reference local font files only")
+    readme = (DOCS.parent / "README.md").read_text(encoding="utf-8")
+    require("Lato" in readme and "S-Core Dream" in readme, "README must name both bundled fonts")
     tokens = declarations((DOCS / "assets/css/tokens.css").read_text(encoding="utf-8"))
-    for name in ("assets/css/components.css", "assets/css/page.css", "assets/js/demo.js"):
+    for name in ("assets/css/components.css", "assets/css/site.css", "assets/js/demo.js", "assets/js/demo/app.js"):
         source = (DOCS / name).read_text(encoding="utf-8")
         defined = set(tokens) | set(declarations(source))
         used = set(re.findall(r"var\(\s*--([\w-]+)", source))
         require(used <= defined, f"{name}: undefined tokens {sorted(used - defined)}")
     demo = (DOCS / "assets/js/demo.js").read_text(encoding="utf-8")
-    require(not re.search(r"#[0-9a-fA-F]{3,8}\b|\brgba?\(", demo), "demo CSS contains raw colours")
     require(not re.search(r"var\(\s*--[\w-]+\s*,", demo), "demo CSS contains token fallbacks")
     demo_readme = (DOCS.parent / "demo/README.md").read_text(encoding="utf-8")
     used_demo_tokens = set(re.findall(r"var\(\s*(--[\w-]+)", demo))
     documented_tokens = set(re.findall(r"--[\w-]+", demo_readme))
     require(used_demo_tokens <= documented_tokens,
             f"demo README lacks host tokens: {sorted(used_demo_tokens - documented_tokens)}")
-    page_css = (DOCS / "assets/css/page.css").read_text(encoding="utf-8")
-    require(all(value == "#fff" for value in re.findall(r"#[0-9a-fA-F]+\b", page_css)),
-            "page CSS raw hex colours are limited to the white SVG mat")
-    old_names = r"--(?:ink|surface|control|paint|accent-ink|card-r|maxw)(?![\w-])"
+    for name in ("css/site.css", "js/main.js", "js/demo.js", "js/demo/app.js"):
+        source = (DOCS / "assets" / name).read_text(encoding="utf-8")
+        require(not re.search(r"#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?)\(", source), f"{name}: raw colour literal")
+    old_names = r"--(?:fg|card|bg2|line-strong|accent-[abc]|radius-[sm]|glow-[\w-]+|sp-[\w-]+|fs-[\w-]+)(?![\w-])"
     harness = DOCS.parent / "demo/harness.html"
-    for path in [*[path for path in files if path.suffix in {".css", ".js", ".mjs"}], harness]:
+    copies = {"assets/css/tokens.css", "assets/css/base.css", "assets/css/components.css", "assets/css/accents.css", "assets/js/kit.js"}
+    files = [path for path in site_files() if path.suffix in {".css", ".js", ".mjs"}
+             and path.relative_to(DOCS).as_posix() not in copies]
+    for path in [*files, harness]:
         require(not re.search(old_names, path.read_text(encoding="utf-8")),
                 f"obsolete token in {path.relative_to(DOCS.parent)}")
-    light, _, _ = palettes()
+    light, _ = palettes()
     harness_tokens = declarations(harness.read_text(encoding="utf-8"))
-    equal(set(harness_tokens), set("bg bg2 card line line-strong fg muted accent-c focus radius-s radius-m wrap".split()),
+    equal(set(harness_tokens), set("bg surface ink muted line control accent focus r-s card-r maxw".split()),
           "harness token roles")
     for name, value in harness_tokens.items():
         equal(value, light[name], f"harness light token/{name}")
-    return "system fonts, resolved kit tokens, demo colours without fallbacks and matching light harness values"
+    return "bundled Lato and S-Core Dream fonts, resolved Paper & Lamp tokens, demo colours without fallbacks and matching light harness values"
 
 
 def check_leftovers():
@@ -754,6 +852,7 @@ def main():
         ("masthead", lambda: check_masthead(page, facts)),
         ("no-logos", lambda: check_no_logos(page)),
         ("zoom", lambda: check_zoom(page)),
+        ("i18n", lambda: check_i18n(page)),
         ("style-files", check_style_files),
         ("contrast", check_contrast),
         ("leftovers", check_leftovers),

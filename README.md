@@ -67,6 +67,8 @@ PVHV_MODELS_CACHE="$PWD/models/cache" python demo/export_scene.py --out docs/ass
 PVHV_MODELS_CACHE="$PWD/models/cache" python demo/export_scene.py --check
 ```
 
+The page uses the Paper & Lamp house style (light and dark themes, English and Korean) with bundled Lato (SIL OFL 1.1) and S-Core Dream fonts; see `docs/assets/fonts/`.
+
 Preview the integrated page locally, then open `http://localhost:8000/`:
 
 ```sh

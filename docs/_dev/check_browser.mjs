@@ -20,6 +20,32 @@ const GL_FLAGS = {
 const TAB_BUDGET = 180;
 const MIN_LABEL_PX = 11;
 const MIN_TEXT_CONTRAST = 4.5;
+// Visible page strings per language (kit.js, main.js, demo.js and the data-ko attributes of index.html).
+const TEXT = {
+  en: { affiliation: 'Sungkyunkwan University, Suwon, South Korea',
+    venue: 'ACM Transactions on Graphics 42(4), Article 86, August 2023 (SIGGRAPH 2023)', venuePrefix: 'Published in ',
+    resources: ['Paper', 'PDF', 'Code', 'BibTeX'], firstLinks: ['Overview', 'Method'],
+    toDark: 'Switch to dark theme', toLight: 'Switch to light theme', langButton: '한국어',
+    zoom: 'Zoom to read labels', fit: 'Fit image to width', region: 'Enlarged image, scroll sideways',
+    copied: 'Copied.', selected: 'Selected.',
+    fallback: 'This interactive demo needs WebGL2 with float render targets (EXT_color_buffer_float), which this browser does not provide.',
+    label: "Re-implementation (2026), not the code used for the paper's experiments",
+    attribution: 'Scene: Chess Set by Riley Queen, Poly Haven, CC0 1.0' },
+  ko: { affiliation: '성균관대학교, 대한민국 수원',
+    venue: 'ACM Transactions on Graphics 42(4), Article 86, 2023년 8월 (SIGGRAPH 2023)', venuePrefix: '게재: ',
+    resources: ['논문', 'PDF', '코드', 'BibTeX'], firstLinks: ['개요', '방법'],
+    toDark: '다크 테마로 전환', toLight: '라이트 테마로 전환', langButton: 'English',
+    zoom: '라벨을 읽도록 확대', fit: '이미지를 너비에 맞춤', region: '확대한 이미지, 옆으로 스크롤',
+    copied: '복사했습니다.', selected: '선택했습니다.',
+    fallback: '이 인터랙티브 데모에는 부동소수점 렌더 타깃(EXT_color_buffer_float)을 지원하는 WebGL2가 필요하지만, 이 브라우저는 지원하지 않습니다.',
+    label: '재구현(2026)이며, 논문 실험에 쓰인 코드가 아닙니다',
+    attribution: '장면: Chess Set by Riley Queen, Poly Haven, CC0 1.0',
+    blocksAttribution: '장면: 절차적으로 생성한 블록 장면 (이 재구현의 일부)' }
+};
+// Visible Latin strings allowed without Hangul in Korean (names and code words that stay English).
+const I18N_ALLOWED = ['PVHV', 'BibTeX', 'English'];
+const HANGUL = /[\uac00-\ud7a3]/;
+const NO_JS_NOTICE = 'The interactive demo needs JavaScript and WebGL2 with float render targets.';
 for (let i = 0; i < args.length; i += 1) {
   if (args[i] === '--out' && args[i + 1]) output = path.resolve(args[++i]);
   else if (args[i] === '--chrome' && args[i + 1]) chromePath = args[++i];
@@ -296,7 +322,8 @@ function targetSizes() {
   for (const input of document.querySelectorAll('input')) {
     for (const label of input.labels || []) candidates.add(label);
   }
-  return [...candidates].flatMap(element => {
+  // The skip link is clipped to 1px until it has focus; the checker measures it focused (skipLinkState).
+  return [...candidates].filter(element => !element.matches('.skip:not(:focus)')).flatMap(element => {
     const style = getComputedStyle(element), box = element.getBoundingClientRect();
     if (!element.getClientRects().length || !box.width || !box.height || style.visibility === 'hidden' ||
         Number(style.opacity) === 0 || (element.tagName === 'A' && style.display === 'inline')) return [];
@@ -307,18 +334,33 @@ function targetSizes() {
   });
 }
 
+function skipLinkState() {
+  const skip = document.querySelector('.skip');
+  skip.focus({ preventScroll: true });
+  const box = skip.getBoundingClientRect();
+  const state = { focused: document.activeElement === skip, width: box.width, height: box.height,
+    inViewport: box.left >= 0 && box.top >= 0 && box.right <= innerWidth && box.bottom <= innerHeight,
+    href: skip.getAttribute('href'), target: Boolean(document.getElementById('main')) };
+  skip.blur();
+  return state;
+}
+
 function mastheadState() {
   const top = document.querySelector('#top'), byline = top.querySelector('.byline');
   const paperLinks = top.querySelector('.paper-links');
+  const [after, before] = [parseFloat(getComputedStyle(byline).marginBottom), parseFloat(getComputedStyle(paperLinks).marginTop)];
   return { images: top.querySelectorAll('img').length,
     logoClass: [...document.querySelectorAll('[class]')].filter(element => /logo/i.test(element.getAttribute('class'))).length,
     logoSrc: [...document.querySelectorAll('img, source')].filter(element =>
       ['src', 'srcset'].some(attribute => /logo/i.test(element.getAttribute(attribute) || ''))).length,
     adjacent: Boolean(byline && paperLinks && byline.nextElementSibling === paperLinks),
     gap: paperLinks.getBoundingClientRect().top - byline.getBoundingClientRect().bottom,
-    expectedGap: parseFloat(getComputedStyle(paperLinks).marginTop) + parseFloat(getComputedStyle(byline).marginBottom),
+    // Both are block-level boxes in normal flow, so their vertical margins collapse (CSS 2.2 §8.3.1).
+    expectedGap: after >= 0 && before >= 0 ? Math.max(after, before) : after < 0 && before < 0 ? Math.min(after, before) : after + before,
     affiliation: top.querySelector('#affiliation').innerText,
     venue: top.querySelector('#venue').innerText,
+    affiliationEn: top.querySelector('#affiliation').getAttribute('data-en'),
+    venueEn: top.querySelector('#venue').getAttribute('data-en'),
     inViewport: ['.venue', '#authors', '#affiliation', '.paper-links'].every(selector => {
       const element = top.querySelector(selector), bounds = element?.getBoundingClientRect();
       return Boolean(bounds && bounds.width > 0 && bounds.height > 0 && bounds.left >= 0 && bounds.top >= 0 &&
@@ -328,7 +370,7 @@ function mastheadState() {
 
 async function recordMasthead(evaluate, result) {
   result.masthead = await evaluate(`(${mastheadState.toString()})()`);
-  const state = result.masthead;
+  const state = result.masthead, text = TEXT[result.lang || 'en'];
   if (state.images !== 0) result.failures.push(`Masthead must contain no images, found ${state.images}`);
   if (state.logoClass !== 0) result.failures.push(`Page must contain no logo classes, found ${state.logoClass}`);
   if (state.logoSrc !== 0) result.failures.push(`Page must contain no logo image sources, found ${state.logoSrc}`);
@@ -336,9 +378,11 @@ async function recordMasthead(evaluate, result) {
   if (Math.abs(state.gap - state.expectedGap) > 1) {
     result.failures.push(`Masthead gap ${state.gap}px differs from expected ${state.expectedGap}px`);
   }
-  if (state.affiliation !== 'Sungkyunkwan University, Suwon, South Korea') result.failures.push('Masthead affiliation differs');
-  if (state.venue !== 'ACM Transactions on Graphics 42(4), Article 86, August 2023 (SIGGRAPH 2023)') {
-    result.failures.push('Masthead venue differs');
+  if (state.affiliation !== text.affiliation) result.failures.push('Masthead affiliation differs');
+  if (state.venue !== text.venue) result.failures.push('Masthead venue differs');
+  // kit.js keeps the markup's English in data-en; the publication facts must survive in it.
+  if (state.affiliationEn !== TEXT.en.affiliation || state.venueEn !== TEXT.en.venue) {
+    result.failures.push('Masthead English affiliation or venue (data-en) differs');
   }
   if (!state.inViewport) result.failures.push('Masthead venue, authors, affiliation and resource row must be in the first viewport');
 }
@@ -355,6 +399,7 @@ function zoomState(slot) {
 }
 
 async function checkZoom(send, evaluate, press, result) {
+  const text = TEXT[result.lang];
   const controls = await evaluate(`([...document.querySelectorAll('[data-zoom]')].map(button => ({
     slot: button.closest('[data-slot]').dataset.slot, width: Number(button.dataset.zoomWidth),
     visible: Boolean(button.getClientRects().length) })))`);
@@ -373,10 +418,10 @@ async function checkZoom(send, evaluate, press, result) {
       const enlarged = await evaluate(`(${zoomState.toString()})(${JSON.stringify(control.slot)})`);
       const record = { slot: control.slot, before, enlarged };
       result.zoom.push(record);
-      if (!control.visible || enlarged.pressed !== 'true' || enlarged.label !== 'Fit image to width' || !enlarged.zoomed ||
+      if (!control.visible || enlarged.pressed !== 'true' || enlarged.label !== text.fit || !enlarged.zoomed ||
           Math.abs(enlarged.width - control.width) > 1 || enlarged.inlineWidth !== control.width + 'px' ||
           !(enlarged.scrollWidth > enlarged.clientWidth) || enlarged.tabindex !== '0' || enlarged.role !== 'region' ||
-          enlarged.labelRegion !== 'Enlarged image, scroll sideways' || !(enlarged.width / enlarged.naturalWidth * enlarged.labelPx >= 11)) {
+          enlarged.labelRegion !== text.region || !(enlarged.width / enlarged.naturalWidth * enlarged.labelPx >= 11)) {
         result.failures.push(`Zoom did not enlarge accessible raster labels: ${JSON.stringify(record)}`);
       }
       record.layout = await evaluate(`(${pageOverflow.toString()})()`);
@@ -391,7 +436,7 @@ async function checkZoom(send, evaluate, press, result) {
         while (performance.now() < deadline) {
           frame.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
           await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-          const box = frame.getBoundingClientRect(), bar = document.querySelector('.topbar').getBoundingClientRect();
+          const box = frame.getBoundingClientRect(), bar = document.querySelector('.nav').getBoundingClientRect();
           consecutive = box.top >= bar.bottom && box.bottom <= innerHeight ? consecutive + 1 : 0;
           if (consecutive === 2) {
             const height = Math.min(220, box.height), x = Math.max(0, box.left), right = Math.min(innerWidth, box.right);
@@ -402,14 +447,14 @@ async function checkZoom(send, evaluate, press, result) {
         throw new Error('Zoom label area did not settle in the viewport');
       })()`, 10000);
       const shot = await send('Page.captureScreenshot', { format: 'jpeg', quality: 85, captureBeyondViewport: false, clip });
-      record.screenshot = path.join(output, `zoom-390-${result.theme}-${control.slot}.jpg`);
+      record.screenshot = path.join(output, `zoom-390-${result.theme}${result.lang === 'ko' ? '-ko' : ''}-${control.slot}.jpg`);
       await writeFile(record.screenshot, Buffer.from(shot.data, 'base64'));
     } finally {
       await focusButton();
       await press('Enter', 13);
       const restored = await evaluate(`(${zoomState.toString()})(${JSON.stringify(control.slot)})`);
       if (result.zoom.length && result.zoom.at(-1).slot === control.slot) result.zoom.at(-1).restored = restored;
-      if (restored.pressed !== 'false' || restored.label !== 'Zoom to read labels' || restored.zoomed ||
+      if (restored.pressed !== 'false' || restored.label !== text.zoom || restored.zoomed ||
           restored.inlineWidth !== '' || Math.abs(restored.width - before.width) > 1 || restored.tabindex !== null ||
           restored.role !== null || restored.labelRegion !== null || restored.scrollWidth > restored.clientWidth + 1) {
         result.failures.push(`Zoom did not restore the image: ${JSON.stringify(restored)}`);
@@ -419,23 +464,72 @@ async function checkZoom(send, evaluate, press, result) {
 }
 
 function mastheadStyleState() {
-  const em = document.querySelector('.paper-title em'), glow = document.querySelector('#top .hero-glow');
-  const venue = document.querySelector('#venue'), style = getComputedStyle(em), box = venue.getBoundingClientRect();
-  const titleRange = document.createRange();
-  titleRange.selectNodeContents(em);
-  const emWidth = em.getBoundingClientRect().width, titleTextWidth = titleRange.getBoundingClientRect().width;
+  const brand = document.querySelector('.t-brand'), top = document.querySelector('#top');
+  const venue = document.querySelector('#venue'), style = getComputedStyle(brand), box = venue.getBoundingClientRect();
+  // Resolve --accent to a computed colour through a probe in the masthead.
+  const probe = document.createElement('span');
+  probe.style.color = 'var(--accent)';
+  top.appendChild(probe);
+  const accent = getComputedStyle(probe).color;
+  probe.remove();
+  const brandRange = document.createRange();
+  brandRange.selectNodeContents(brand);
+  const brandBox = brand.getBoundingClientRect(), brandText = brandRange.getBoundingClientRect();
   const range = document.createRange();
   range.selectNodeContents(venue);
   const textBoxes = [...range.getClientRects()];
-  const pill = venue.closest('.venue').getBoundingClientRect();
-  return { fill: style.webkitTextFillColor, clip: style.backgroundClip || style.webkitBackgroundClip,
-    emWidth, titleTextWidth, emFits: emWidth <= titleTextWidth + 2,
-    size: parseFloat(style.fontSize), drift: getComputedStyle(glow, '::before').animationName,
-    grid: getComputedStyle(glow, '::after').backgroundImage, venue: venue.innerText,
+  const container = venue.closest('.venue').getBoundingClientRect();
+  const prefix = document.querySelector('.venue .vh'), prefixBox = prefix.getBoundingClientRect();
+  return { brand: brand.textContent, brandColor: style.color, accent, size: parseFloat(style.fontSize),
+    brandFits: brandText.width > 0 && brandText.left >= brandBox.left - 1 && brandText.right <= brandBox.right + 1 &&
+      brandText.left >= -1 && brandText.right <= innerWidth + 1,
+    border: getComputedStyle(top).borderBottomColor, borderWidth: parseFloat(getComputedStyle(top).borderBottomWidth),
+    venuePrefix: prefix.textContent, prefixHidden: prefixBox.width <= 1 && prefixBox.height <= 1, venue: venue.innerText,
     venueFits: box.left >= 0 && box.right <= innerWidth + 1 && box.width > 0 && box.height >= 44 &&
-      textBoxes.every(line => line.left >= pill.left - 1 && line.right <= pill.right + 1 &&
-        line.top >= pill.top - 1 && line.bottom <= pill.bottom + 1) &&
+      textBoxes.every(line => line.left >= container.left - 1 && line.right <= container.right + 1 &&
+        line.top >= container.top - 1 && line.bottom <= container.bottom + 1) &&
       venue.scrollWidth <= venue.clientWidth + 1 && venue.scrollHeight <= venue.clientHeight + 1 };
+}
+
+// Korean audit: a visible string (own text, aria-label, alt or title) in header, main or footer with no Hangul and a
+// Latin word of 4+ letters fails, unless it is one of the parts that stay English or an allowed name.
+function i18nAudit(allowed) {
+  const hangul = /[\uac00-\ud7a3]/;
+  const exempt = 'h1, #authors, #citation, [lang="en"], .credit a, .pvhv-demo-attrib a, code';
+  const visible = element => {
+    const style = getComputedStyle(element);
+    return element.getClientRects().length > 0 && style.visibility !== 'hidden' && style.visibility !== 'collapse';
+  };
+  const describe = element => element.tagName.toLowerCase() + (element.id ? '#' + element.id : '') +
+    [...element.classList].map(name => '.' + name).join('');
+  const offenders = [];
+  let checked = 0;
+  const test = (element, kind, value) => {
+    const text = (value || '').trim();
+    if (!text) return;
+    checked += 1;
+    if (hangul.test(text) || !/[A-Za-z]{4,}/.test(text) || allowed.includes(text)) return;
+    offenders.push({ element: describe(element), kind, text: text.slice(0, 160) });
+  };
+  for (const element of document.querySelectorAll('header, header *, main, main *, footer, footer *')) {
+    // Options have no boxes of their own; their select decides.
+    if (!visible(element.tagName === 'OPTION' ? element.closest('select') : element) || element.closest(exempt)) continue;
+    test(element, 'text', [...element.childNodes].filter(node => node.nodeType === 3).map(node => node.textContent).join(''));
+    for (const attribute of ['aria-label', 'alt', 'title']) test(element, attribute, element.getAttribute(attribute));
+  }
+  return { allowed, checked, offenders };
+}
+
+function demoStrings() {
+  const demo = document.querySelector('.pvhv-demo');
+  return { legend: demo.querySelector('legend').textContent,
+    labels: [...demo.querySelectorAll('label')].map(label => label.textContent),
+    options: [...demo.querySelectorAll('option')].map(option => option.textContent),
+    button: demo.querySelector('button').textContent, help: demo.querySelector('.pvhv-demo-help').textContent,
+    status: demo.querySelector('.pvhv-demo-status').textContent,
+    view: demo.querySelector('canvas').getAttribute('aria-label'),
+    label: demo.querySelector('.pvhv-demo-label').textContent,
+    attribution: demo.querySelector('.pvhv-demo-attrib').textContent };
 }
 
 async function capturePage(send, evaluate, result, prefix) {
@@ -467,7 +561,7 @@ async function capturePage(send, evaluate, result, prefix) {
     const bottom = Math.min(top + segmentHeight, result.contentHeight);
     const clip = { x: 0, y: top, width: content.width, height: bottom - top, scale: 1 };
     const shot = await send('Page.captureScreenshot', { format: 'jpeg', quality: 85, captureBeyondViewport: true, clip });
-    const filename = path.join(output, `${prefix}-${result.width}-${result.theme}-part${result.screenshots.length + 1}.jpg`);
+    const filename = path.join(output, `${prefix}-${result.width}-${result.theme}${result.lang === 'ko' ? '-ko' : ''}-part${result.screenshots.length + 1}.jpg`);
     await writeFile(filename, Buffer.from(shot.data, 'base64'));
     result.screenshots.push(filename);
     result.screenshotSegments.push({ y: top, height: bottom - top });
@@ -475,8 +569,11 @@ async function capturePage(send, evaluate, result, prefix) {
   }
 }
 
-async function checkWidth(origin, width, height, theme) {
-  const result = { width, height, theme, errors: [], externalRequests: [], failedRequests: [], fontRequests: [], failures: [] };
+async function checkWidth(origin, width, height, theme, lang = 'en') {
+  const result = { width, height, theme, lang, errors: [], externalRequests: [], failedRequests: [], fontRequests: [], failures: [] };
+  const text = TEXT[lang];
+  // With no saved choice the kit follows the system, so the OS prefers the other theme and the toggle picks this one.
+  const os = theme === 'dark' ? 'light' : 'dark';
   const { targetId } = await cdp.send('Target.createTarget', { url: 'about:blank' });
   const { sessionId } = await cdp.send('Target.attachToTarget', { targetId, flatten: true });
   const send = (method, params = {}, milliseconds) => cdp.send(method, params, sessionId, milliseconds);
@@ -526,7 +623,7 @@ async function checkWidth(origin, width, height, theme) {
     if (method === 'Network.requestWillBeSent') {
       requests.add(params.requestId);
       const url = params.request.url;
-      if (params.type === 'Font') result.fontRequests.push(url);
+      if (params.type === 'Font' || /\.(?:woff2?|otf|ttf)(?:[?#]|$)/i.test(url)) result.fontRequests.push(url);
       if (!url.startsWith('data:') && !url.startsWith('blob:') && new URL(url).origin !== origin) result.externalRequests.push(url);
     }
     if (method === 'Network.loadingFailed' && requests.has(params.requestId)) {
@@ -540,7 +637,7 @@ async function checkWidth(origin, width, height, theme) {
   try {
     for (const domain of ['Page', 'Runtime', 'Log', 'Network']) await send(`${domain}.enable`);
     await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: width === 390 ? 2 : 1, mobile: width === 390 });
-    await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'dark' }] });
+    await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: os }] });
     try {
       await cdp.send('Browser.grantPermissions', { origin, permissions: ['clipboardReadWrite', 'clipboardSanitizedWrite'] });
       result.clipboardPermission = 'granted';
@@ -555,43 +652,60 @@ async function checkWidth(origin, width, height, theme) {
       await waitFor(() => loaded, 30000, `Reload at ${width}px in ${theme}`);
     };
     loaded = false;
-    const navigation = await send('Page.navigate', { url: `${origin}/index.html` }, 30000);
+    const navigation = await send('Page.navigate', { url: `${origin}/index.html${lang === 'ko' ? '?lang=ko' : ''}` }, 30000);
     if (navigation.errorText) throw new Error(navigation.errorText);
     await waitFor(() => loaded, 30000, `Load at ${width}px`);
-    await evaluate("localStorage.removeItem('ppk-theme'); true");
-    await reload(theme === 'light');
-    result.initialTheme = await evaluate(`({ theme: document.documentElement.dataset.theme,
-      defaultTheme: document.documentElement.dataset.themeDefault })`);
-    if (result.initialTheme.theme !== 'light' || result.initialTheme.defaultTheme !== 'light') {
-      result.failures.push('Paper must open light even when the OS prefers dark');
+    await evaluate("localStorage.removeItem('ws-theme'); localStorage.removeItem('ws-lang'); true");
+    await reload(false);
+    const themeState = `({ theme: document.documentElement.dataset.theme, lang: document.documentElement.lang,
+      saved: localStorage.getItem('ws-theme'), savedLang: localStorage.getItem('ws-lang'),
+      label: document.querySelector('[data-theme-toggle]').getAttribute('aria-label'),
+      langButton: document.querySelector('[data-lang-toggle]').textContent.trim(),
+      scheme: getComputedStyle(document.documentElement).colorScheme })`;
+    result.initialTheme = await evaluate(themeState);
+    if (result.initialTheme.theme !== os || result.initialTheme.scheme !== os || result.initialTheme.saved !== null) {
+      result.failures.push(`With no saved choice the page must follow the OS theme (${os})`);
     }
-    if (theme === 'dark') {
-      await evaluate("document.querySelector('[data-theme-toggle]').focus(); true");
-      await press('Enter', 13);
-      result.themeToggle = await evaluate(`({ theme: document.documentElement.dataset.theme,
-        saved: localStorage.getItem('ppk-theme'), label: document.querySelector('[data-theme-toggle]').getAttribute('aria-label'),
-        scheme: document.querySelector('meta[name="color-scheme"]').content })`);
-      if (result.themeToggle.theme !== 'dark' || result.themeToggle.saved !== 'dark' ||
-          result.themeToggle.label !== 'Switch to light theme' || result.themeToggle.scheme !== 'dark') {
-        result.failures.push('Keyboard theme toggle did not update theme, saved choice, action label and colour scheme');
-      }
-      await reload(true);
+    if (result.initialTheme.lang !== lang || result.initialTheme.langButton !== text.langButton) {
+      result.failures.push(`Page must open in ${lang} with the language toggle offering the other language`);
     }
-    result.finalTheme = await evaluate(`({ theme: document.documentElement.dataset.theme,
-      saved: localStorage.getItem('ppk-theme'), label: document.querySelector('[data-theme-toggle]').getAttribute('aria-label'),
-      scheme: document.querySelector('meta[name="color-scheme"]').content })`);
-    if (result.finalTheme.theme !== theme || result.finalTheme.scheme !== theme ||
-        result.finalTheme.label !== (theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme') ||
-        (theme === 'dark' && result.finalTheme.saved !== 'dark')) result.failures.push('Theme did not survive the final reload');
+    await evaluate("document.querySelector('[data-theme-toggle]').focus(); true");
+    await press('Enter', 13);
+    result.themeToggle = await evaluate(themeState);
+    if (result.themeToggle.theme !== theme || result.themeToggle.saved !== theme ||
+        result.themeToggle.label !== (theme === 'dark' ? text.toLight : text.toDark) || result.themeToggle.scheme !== theme) {
+      result.failures.push('Keyboard theme toggle did not update theme, saved choice, action label and colour scheme');
+    }
+    await reload(true);
+    result.finalTheme = await evaluate(themeState);
+    if (result.finalTheme.theme !== theme || result.finalTheme.scheme !== theme || result.finalTheme.saved !== theme ||
+        result.finalTheme.label !== (theme === 'dark' ? text.toLight : text.toDark) ||
+        result.finalTheme.lang !== lang || result.finalTheme.savedLang !== null) {
+      result.failures.push('Theme did not survive the final reload');
+    }
     try {
       await evaluate('document.fonts.ready.then(() => true)', 10000);
+      result.fonts = await evaluate(`({ body: getComputedStyle(document.body).fontFamily,
+        loaded: [...document.fonts].filter(face => face.status === 'loaded').map(face => face.family.replace(/["']/g, '') + ' ' + face.weight) })`);
+      const local = result.fontRequests.filter(url => url.startsWith(`${origin}/assets/fonts/`));
+      const korean = result.fontRequests.filter(url => /\/SCDream\d\.otf$/.test(url));
+      if (local.length !== result.fontRequests.length) result.failures.push(`Font requests outside assets/fonts: ${JSON.stringify(result.fontRequests)}`);
+      if (lang === 'en' && (!/^Lato,/.test(result.fonts.body) || !result.fonts.loaded.some(face => face.startsWith('Lato ')) || korean.length)) {
+        result.failures.push(`English must render in the bundled Lato without requesting S-Core Dream: ${JSON.stringify(result.fonts)}`);
+      }
+      if (lang === 'ko' && (!/^"S-Core Dream",/.test(result.fonts.body) || !korean.length ||
+          !result.fonts.loaded.some(face => face.startsWith('S-Core Dream ')))) {
+        result.failures.push(`Korean must render in the bundled S-Core Dream: ${JSON.stringify(result.fonts)}`);
+      }
     } catch (error) {
       result.failures.push(`Fonts: ${error.message}`);
     }
     try {
       await recordMasthead(evaluate, result);
-      if (width === 390 && await evaluate("getComputedStyle(document.querySelector('.venue'), '::before').display") !== 'none') {
-        result.failures.push('Phone venue dot must be hidden');
+      result.skipLink = await evaluate(`(${skipLinkState.toString()})()`);
+      if (!result.skipLink.focused || result.skipLink.height < 44 || !result.skipLink.inViewport ||
+          result.skipLink.href !== '#main' || !result.skipLink.target) {
+        result.failures.push(`Focused skip link must be a visible 44 px target to #main: ${JSON.stringify(result.skipLink)}`);
       }
     } catch (error) {
       result.failures.push(`Masthead: ${error.message}`);
@@ -676,8 +790,7 @@ async function checkWidth(origin, width, height, theme) {
     }
     try {
       Object.assign(result, await evaluate(`(() => {
-      return { ...(${pageOverflow.toString()})(), fontCount: document.fonts.size,
-        bodyFont: getComputedStyle(document.body).fontFamily, slots: document.querySelectorAll('[data-slot]').length,
+      return { ...(${pageOverflow.toString()})(), slots: document.querySelectorAll('[data-slot]').length,
         unfilledSlots: [...document.querySelectorAll('.slot-box')].filter(e => !e.closest('#demo-root')).length,
         demoPlaceholders: document.querySelectorAll('#demo-root .slot-box').length,
         removedSectionPresent: Boolean(document.querySelector('#video')),
@@ -687,15 +800,12 @@ async function checkWidth(origin, width, height, theme) {
           naturalWidth: image.naturalWidth })) };
       })()`));
       if (result.overflow) result.failures.push(`Horizontal overflow: ${result.scrollWidth} > ${result.innerWidth}; ${result.widestOffender}`);
-      if (result.fontCount !== 0 || result.fontRequests.length || !/^system-ui(?:,|$)/.test(result.bodyFont)) {
-        result.failures.push('Expected the system-ui stack with no font faces or Font requests');
-      }
       if (result.slots !== 5) result.failures.push(`Expected 5 slots, found ${result.slots}`);
       if (result.unfilledSlots) result.failures.push(`${result.unfilledSlots} slot-box placeholders outside demo`);
       if (result.demoPlaceholders) result.failures.push('Demo placeholder was not replaced');
       if (result.removedSectionPresent) result.failures.push('Removed media section is still present');
       if (result.iframeCount) result.failures.push(`Expected no iframe, found ${result.iframeCount}`);
-      if (JSON.stringify(result.resourceLabels) !== JSON.stringify(['Paper', 'PDF', 'Code', 'BibTeX'])) {
+      if (JSON.stringify(result.resourceLabels) !== JSON.stringify(text.resources)) {
         result.failures.push(`Unexpected resource labels: ${JSON.stringify(result.resourceLabels)}`);
       }
       for (const image of result.images) {
@@ -744,21 +854,23 @@ async function checkWidth(origin, width, height, theme) {
 
     try {
       if (width === 390) await evaluate("document.getElementById('menu-toggle').click(); true");
+      // The abstract is collapsed on load; open it so its text can be sampled (and audited in Korean).
+      await evaluate("document.querySelector('details.abstract').open = true; true");
       try {
         const samples = Object.entries({
           body: 'body', authors: '#authors', affiliation: '#affiliation', venue: '#venue',
-          navLink: '#section-nav a', themeToggle: '[data-theme-toggle]', pill: '.paper-links a',
-          tldr: '.tldr p', abstract: '#abstract-text', panelCaption: '.panel-cap', figureCaption: '#overview figcaption',
-          methodCaption: '.method-fig figcaption', kicker: '#method .kicker', reimplFlag: '.reimpl-flag',
+          navLink: '#section-nav a', themeToggle: '[data-theme-toggle]', langToggle: '[data-lang-toggle]',
+          resourcePrimary: '.paper-links a.primary', resourceLink: '.paper-links a:not(.primary)', title: '#title',
+          band: '.band p', abstract: '#abstract-text', ...(lang === 'ko' ? { abstractKo: '#abstract p[lang="ko"]:not(.note)' } : {}),
+          panelCaption: '.panel-cap', figureCaption: '#overview figcaption',
+          methodCaption: '.method-fig figcaption', disc: '#method .disc', reimplFlag: '.reimpl-flag',
           noteLink: '#reimplementation a', noteText: '#reimplementation p', citation: '#citation',
           copyButton: '#copy', footer: 'footer p', demoHelp: '.pvhv-demo-help', status: '.pvhv-demo-status',
           legend: '.pvhv-demo legend', radioLabel: '.pvhv-demo-modes label', select: '.pvhv-demo select',
           button: '.pvhv-demo button', captionLabel: '.pvhv-demo-label', attribution: '.pvhv-demo-attrib',
           attributionLink: '.pvhv-demo-attrib a', busy: '.pvhv-demo-busy', ...(width === 390 ? { menu: '#menu-toggle', zoomButton: '[data-zoom]' } : {})
         }).map(([name, selector]) => ({ name, selector }));
-        samples.push({ name: 'titleStart', selector: '.paper-title em', token: '--accent-a', backgroundToken: '--bg', minimum: 3 },
-          { name: 'titleEnd', selector: '.paper-title em', token: '--accent-b', backgroundToken: '--bg', minimum: 3 },
-          { name: 'heading', selector: 'h2', minimum: 3 });
+        samples.push({ name: 'brand', selector: '.t-brand', minimum: 3 }, { name: 'heading', selector: 'h2', minimum: 3 });
         result.contrast = await evaluate(`(${renderedContrast.toString()})(${JSON.stringify(samples)}, ${JSON.stringify({ theme, showBusy: true })})`);
         for (const pair of result.contrast) {
           if (pair.missing) result.failures.push(`Required contrast sample missing or hidden: ${pair.name}`);
@@ -768,18 +880,26 @@ async function checkWidth(origin, width, height, theme) {
         }
         result.smallTargets = await evaluate(`(${targetSizes.toString()})()`);
         if (result.smallTargets.length) result.failures.push(`Targets below 44 px: ${JSON.stringify(result.smallTargets)}`);
+        if (lang === 'ko') {
+          result.i18nAudit = await evaluate(`(${i18nAudit.toString()})(${JSON.stringify(I18N_ALLOWED)})`);
+          if (result.demo !== 'ready') result.failures.push('Korean audit needs the demo ready');
+          if (result.i18nAudit.offenders.length) result.failures.push(`Untranslated visible strings: ${JSON.stringify(result.i18nAudit.offenders)}`);
+        }
       } finally {
         if (width === 390) await evaluate("if (document.getElementById('menu-toggle').getAttribute('aria-expanded') === 'true') document.getElementById('menu-toggle').click(); true");
       }
       result.masthead = { ...result.masthead, ...await evaluate(`(${mastheadStyleState.toString()})()`) };
-      if (!['transparent', 'rgba(0, 0, 0, 0)'].includes(result.masthead.fill) || result.masthead.clip !== 'text' || result.masthead.size < 24) {
-        result.failures.push('PVHV emphasis must be large gradient text with transparent text fill');
+      if (result.masthead.brand !== 'PVHV' || result.masthead.brandColor !== result.masthead.accent || result.masthead.size < 24) {
+        result.failures.push('PVHV brand must be large text in the accent colour');
       }
-      if (!result.masthead.emFits) {
-        result.failures.push(`PVHV emphasis box ${result.masthead.emWidth}px exceeds its text width ${result.masthead.titleTextWidth}px + 2px`);
+      if (!result.masthead.brandFits) result.failures.push('PVHV brand text exceeds its box or the viewport');
+      if (result.masthead.border !== result.masthead.accent || !(result.masthead.borderWidth > 0)) {
+        result.failures.push('Masthead must end in an accent border');
       }
-      if (result.masthead.drift !== 'ppk-drift' || result.masthead.grid === 'none') result.failures.push('Hero drift or dot grid missing');
-      if (result.masthead.venue !== 'ACM Transactions on Graphics 42(4), Article 86, August 2023 (SIGGRAPH 2023)' || !result.masthead.venueFits) {
+      if (result.masthead.venuePrefix !== text.venuePrefix || !result.masthead.prefixHidden) {
+        result.failures.push('Venue prefix must be present for screen readers and visually hidden');
+      }
+      if (result.masthead.venue !== text.venue || !result.masthead.venueFits) {
         result.failures.push('Venue text changed or is clipped');
       }
     } catch (error) {
@@ -787,10 +907,11 @@ async function checkWidth(origin, width, height, theme) {
     }
 
     try {
-      const stops = ['.skip-link', '.brand', ...(width === 390 ? ['#menu-toggle'] :
+      const stops = ['.skip', '.brand', ...(width === 390 ? ['#menu-toggle'] :
         ['#section-nav a:nth-child(1)', '#section-nav a:nth-child(2)', '#section-nav a:nth-child(3)',
-          '#section-nav a:nth-child(4)', '#section-nav a:nth-child(5)']), '[data-theme-toggle]', '#venue',
-        '.paper-links a:nth-child(1)', '.paper-links a:nth-child(2)', '.paper-links a:nth-child(3)', '.paper-links a:nth-child(4)'];
+          '#section-nav a:nth-child(4)', '#section-nav a:nth-child(5)']), '[data-theme-toggle]', '[data-lang-toggle]',
+        '.paper-links a:nth-child(1)', '.paper-links a:nth-child(2)', '.paper-links a:nth-child(3)', '.paper-links a:nth-child(4)',
+        '.reimpl-flag a', '#venue'];
       await evaluate(`window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
         document.body.tabIndex = -1; document.body.focus(); document.body.removeAttribute('tabindex'); true`);
       result.firstTabStops = [];
@@ -837,9 +958,9 @@ async function checkWidth(origin, width, height, theme) {
         await press('Escape', 27);
         expect(await record('Escape'), { expanded: 'false', linksVisible: 0, focus: 'menu' }, 'after Escape');
         await press('ArrowDown', 40);
-        expect(await record('ArrowDown'), { expanded: 'true', linksVisible: 5, focus: 'link:Overview' }, 'after ArrowDown');
+        expect(await record('ArrowDown'), { expanded: 'true', linksVisible: 5, focus: `link:${text.firstLinks[0]}` }, 'after ArrowDown');
         await press('ArrowDown', 40);
-        expect(await record('ArrowDown 2'), { focus: 'link:Method' }, 'after second ArrowDown');
+        expect(await record('ArrowDown 2'), { focus: `link:${text.firstLinks[1]}` }, 'after second ArrowDown');
         await press('Escape', 27);
         expect(await record('Escape 2'), { expanded: 'false', linksVisible: 0, focus: 'menu' }, 'after Escape from a link');
         await press('Enter', 13);
@@ -866,9 +987,9 @@ async function checkWidth(origin, width, height, theme) {
           const status = document.getElementById('copy-status').textContent;
           try {
             const actual = await navigator.clipboard.readText();
-            return { mode: 'clipboard', exact: actual === expected, status };
+            return { mode: 'clipboard', exact: actual === expected && status === ${JSON.stringify(text.copied)}, status };
           } catch {
-            return { mode: 'selection', exact: getSelection().toString() === expected && status.includes('selected'), status };
+            return { mode: 'selection', exact: getSelection().toString() === expected && status.startsWith(${JSON.stringify(text.selected)}), status };
           }
         })()`);
         result.copy = copyResult;
@@ -883,6 +1004,27 @@ async function checkWidth(origin, width, height, theme) {
       await capturePage(send, evaluate, result, 'shot');
     } catch (error) {
       result.failures.push(`Screenshot: ${error.message}`);
+    }
+    if (lang === 'ko' && width === 1440) {
+      try {
+        // The second scene in Korean: its attribution, status and every other string, audited again.
+        if (result.demo !== 'ready') throw new Error('the demo is not ready');
+        await evaluate("PVHVDemo.setScene('blocks').then(() => PVHVDemo.whenIdle()).then(() => true)", 180000);
+        result.blocks = await evaluate(`({ scene: PVHVDemo.getState().scene,
+          attribution: document.querySelector('.pvhv-demo-attrib').textContent,
+          status: document.querySelector('.pvhv-demo-status').textContent,
+          select: document.querySelector('.pvhv-demo select').selectedOptions[0].textContent,
+          audit: (${i18nAudit.toString()})(${JSON.stringify(I18N_ALLOWED)}) })`);
+        if (result.blocks.scene !== 'blocks' || result.blocks.attribution !== text.blocksAttribution ||
+            !HANGUL.test(result.blocks.status) || result.blocks.select !== '블록') {
+          result.failures.push(`Korean blocks scene attribution or status: ${JSON.stringify(result.blocks)}`);
+        }
+        if (result.blocks.audit.offenders.length) {
+          result.failures.push(`Untranslated visible strings in the blocks scene: ${JSON.stringify(result.blocks.audit.offenders)}`);
+        }
+      } catch (error) {
+        result.failures.push(`Korean blocks scene: ${error.message}`);
+      }
     }
     // Protocol round trip drains resource/error events before collection ends.
     try {
@@ -904,8 +1046,9 @@ async function checkWidth(origin, width, height, theme) {
   return result;
 }
 
-async function checkVariant(origin, width, height, theme, kind) {
-  const result = { width, height, theme, kind, errors: [], externalRequests: [], failedRequests: [], failures: [] };
+async function checkVariant(origin, width, height, theme, kind, lang = 'en') {
+  const result = { width, height, theme, kind, lang, errors: [], externalRequests: [], failedRequests: [], failures: [] };
+  const text = TEXT[lang];
   const { targetId } = await cdp.send('Target.createTarget', { url: 'about:blank' });
   const { sessionId } = await cdp.send('Target.attachToTarget', { targetId, flatten: true });
   const send = (method, params = {}, milliseconds) => cdp.send(method, params, sessionId, milliseconds);
@@ -940,19 +1083,20 @@ async function checkVariant(origin, width, height, theme, kind) {
     await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'dark' },
       { name: 'prefers-reduced-motion', value: kind === 'reduced' ? 'reduce' : 'no-preference' }] });
     await send('Page.addScriptToEvaluateOnNewDocument', { source: `
-      localStorage.setItem('ppk-theme', ${JSON.stringify(theme)});
-      localStorage.removeItem('ppk-motion');
+      localStorage.setItem('ws-theme', ${JSON.stringify(theme)});
+      localStorage.removeItem('ws-lang');
       ${kind === 'fallback' ? `if (window.WebGL2RenderingContext) {
         const original = WebGL2RenderingContext.prototype.getExtension;
         WebGL2RenderingContext.prototype.getExtension = function (name) {
           return name === 'EXT_color_buffer_float' ? null : original.call(this, name);
         };
       }` : ''}` });
-    const navigation = await send('Page.navigate', { url: `${origin}/index.html` }, 30000);
+    const navigation = await send('Page.navigate', { url: `${origin}/index.html${lang === 'ko' ? '?lang=ko' : ''}` }, 30000);
     if (navigation.errorText) throw new Error(navigation.errorText);
     await waitFor(() => loaded, 30000, `${kind} load at ${width}px in ${theme}`);
     result.theme = await evaluate('document.documentElement.dataset.theme');
     if (result.theme !== theme) result.failures.push(`Expected ${theme}, found ${result.theme}`);
+    if (await evaluate('document.documentElement.lang') !== lang) result.failures.push(`Expected html[lang=${lang}]`);
     if (kind === 'masthead') {
       await recordMasthead(evaluate, result);
       const shot = await send('Page.captureScreenshot', { format: 'jpeg', quality: 85, captureBeyondViewport: false,
@@ -968,12 +1112,10 @@ async function checkVariant(origin, width, height, theme, kind) {
           attribution: document.querySelector('.pvhv-demo-attrib')?.innerText,
           links: [...document.querySelectorAll('.pvhv-demo-attrib a')].map(a => a.getAttribute('href')) };
       })()`);
-      const expected = 'This interactive demo needs WebGL2 with float render targets (EXT_color_buffer_float), which this browser does not provide.';
-      if (!result.notice.visible || result.notice.text !== expected || result.notice.role !== 'status') {
+      if (!result.notice.visible || result.notice.text !== text.fallback || result.notice.role !== 'status') {
         result.failures.push('Expected visible fallback notice with its exact text and status role');
       }
-      if (result.notice.label !== "Re-implementation (2026), not the code used for the paper's experiments" ||
-          result.notice.attribution !== 'Scene: Chess Set by Riley Queen, Poly Haven, CC0 1.0' ||
+      if (result.notice.label !== text.label || result.notice.attribution !== text.attribution ||
           JSON.stringify(result.notice.links) !== JSON.stringify(['https://polyhaven.com/a/chess_set', 'https://creativecommons.org/publicdomain/zero/1.0/'])) {
         result.failures.push('Fallback must retain its re-implementation label and linked scene attribution');
       }
@@ -984,6 +1126,55 @@ async function checkVariant(origin, width, height, theme, kind) {
       for (const pair of result.contrast) {
         if (pair.missing || !(pair.ratio >= MIN_TEXT_CONTRAST)) result.failures.push(`Fallback contrast: ${JSON.stringify(pair)}`);
       }
+    } else if (kind === 'switch') {
+      // Runtime language switch: the demo re-labels itself in place, keeps its state, controls and focus.
+      await waitFor(() => evaluate("Boolean(window.PVHVDemo || document.querySelector('.pvhv-demo-fallback'))"), 120000, 'Switch demo mount');
+      if (!await evaluate('Boolean(window.PVHVDemo)')) throw new Error('the demo fell back; the language switch needs it running');
+      await evaluate('PVHVDemo.ready.then(() => PVHVDemo.whenIdle()).then(() => true)', 120000);
+      // Leave the defaults so an unchanged state is meaningful: BDP, highlight on, an off-centre view.
+      await evaluate(`(() => { const E = PVHVDemo.getState().E; PVHVDemo.setMode('bdp'); PVHVDemo.setHighlight(true);
+        PVHVDemo.setView(E * .3, -E * .2); return PVHVDemo.whenIdle().then(() => true); })()`, 30000);
+      const snapshot = `(() => ({ lang: document.documentElement.lang, strings: (${demoStrings.toString()})(),
+        state: (({ scene, mode, t, highlight }) => ({ scene, mode, t, highlight }))(PVHVDemo.getState()),
+        checked: document.querySelector('.pvhv-demo input[type="radio"]:checked').value,
+        sameNodes: window.__pvhvSwitchNodes.every((node, index) => node.isConnected &&
+          node === [...document.querySelectorAll('.pvhv-demo canvas, .pvhv-demo input, .pvhv-demo select, .pvhv-demo button')][index]),
+        focusKept: document.activeElement === window.__pvhvSwitchNodes.find(node => node.tagName === 'SELECT'),
+        nav: document.querySelector('#section-nav a').textContent, alt: document.querySelector('[data-slot="teaser"] img').alt,
+        zoom: document.querySelector('[data-zoom]').textContent }))()`;
+      await evaluate(`window.__pvhvSwitchNodes = [...document.querySelectorAll('.pvhv-demo canvas, .pvhv-demo input, .pvhv-demo select, .pvhv-demo button')];
+        document.querySelector('.pvhv-demo select').focus(); true`);
+      const toggle = "document.querySelector('[data-lang-toggle]').click(); PVHVDemo.whenIdle().then(() => true)";
+      const english = await evaluate(snapshot);
+      await evaluate(toggle, 30000);
+      const korean = await evaluate(snapshot);
+      await evaluate(toggle, 30000);
+      const back = await evaluate(snapshot);
+      await evaluate("localStorage.removeItem('ws-lang'); true");
+      result.languageSwitch = { english, korean, back };
+      const strings = value => [value.legend, ...value.labels, ...value.options, value.button, value.help, value.status,
+        value.view, value.label, value.attribution];
+      const untranslated = strings(korean.strings).filter(value => !HANGUL.test(value));
+      if (english.lang !== 'en' || korean.lang !== 'ko' || back.lang !== 'en') result.failures.push('Language toggle did not flip html[lang]');
+      if (english.strings.attribution !== TEXT.en.attribution || english.strings.label !== TEXT.en.label ||
+          strings(english.strings).some(value => HANGUL.test(value))) result.failures.push('Demo did not start in English');
+      if (untranslated.length) result.failures.push(`Demo strings not Korean after the switch: ${JSON.stringify(untranslated)}`);
+      if (korean.strings.attribution !== TEXT.ko.attribution || korean.strings.label !== TEXT.ko.label) {
+        result.failures.push('Demo label or attribution prefix not Korean after the switch');
+      }
+      if (!HANGUL.test(korean.nav) || !HANGUL.test(korean.alt) || !HANGUL.test(korean.zoom) || korean.zoom !== TEXT.ko.zoom) {
+        result.failures.push('Page navigation, image alt or zoom label not Korean after the switch');
+      }
+      for (const [name, value] of [['Korean', korean], ['English again', back]]) {
+        if (JSON.stringify(value.state) !== JSON.stringify(english.state) || value.checked !== english.state.mode) {
+          result.failures.push(`Demo state changed by the switch to ${name}`);
+        }
+        if (!value.sameNodes || !value.focusKept) result.failures.push(`Demo controls rebuilt or focus lost by the switch to ${name}`);
+      }
+      if (JSON.stringify(back.strings) !== JSON.stringify(english.strings) || back.nav !== english.nav ||
+          back.alt !== english.alt || back.zoom !== english.zoom) {
+        result.failures.push('Switching back did not restore the exact English strings');
+      }
     } else {
       await waitFor(() => evaluate("Boolean(window.PVHVDemo || document.querySelector('.pvhv-demo-fallback'))"), 120000, 'Reduced motion demo mount');
       if (await evaluate('Boolean(window.PVHVDemo)')) {
@@ -991,8 +1182,8 @@ async function checkVariant(origin, width, height, theme, kind) {
       } else if (!allowFallback) result.failures.push('Reduced motion demo fell back');
       await evaluate('Promise.all([...document.images].map(image => image.decode())).then(() => true)', 30000);
       result.motion = await evaluate(`(() => {
-        const glow = getComputedStyle(document.querySelector('.hero-glow'), '::before');
-        return { animations: document.getAnimations().length, animation: glow.animationName, background: glow.backgroundImage,
+        const chevron = getComputedStyle(document.querySelector('.abstract summary'), '::after');
+        return { animations: document.getAnimations().length, chevronTransition: chevron.transitionDuration,
           scroll: getComputedStyle(document.documentElement).scrollBehavior,
           sections: [...document.querySelectorAll('section')].map(section => ({ id: section.id,
             opacity: getComputedStyle(section).opacity, width: section.getBoundingClientRect().width,
@@ -1002,8 +1193,8 @@ async function checkVariant(origin, width, height, theme, kind) {
           images: [...document.images].map(image => ({ src: image.getAttribute('src'), complete: image.complete,
             width: image.naturalWidth })) };
       })()`);
-      if (result.motion.animations !== 0 || result.motion.animation !== 'none' || result.motion.background === 'none' ||
-          result.motion.scroll !== 'auto') result.failures.push('Reduced motion must show a still glow with no animations and instant scroll');
+      if (result.motion.animations !== 0 || result.motion.chevronTransition !== '0s' ||
+          result.motion.scroll !== 'auto') result.failures.push('Reduced motion must show no animations or transitions and scroll instantly');
       if (!result.motion.sections.length || result.motion.sections.some(section => section.opacity !== '1' || section.width <= 0 || section.height <= 0)) {
         result.failures.push('Reduced motion contains a hidden or empty section');
       }
@@ -1021,6 +1212,75 @@ async function checkVariant(origin, width, height, theme, kind) {
     result.failures.push(error.message);
   } finally {
     cdp.listeners.delete(collect);
+    await cdp.send('Target.closeTarget', { targetId }).catch(() => {});
+  }
+  return result;
+}
+
+async function checkMenuHistory(origin) {
+  // Phone menu choices must be real navigations: Back returns to the previous section, not off the page.
+  const result = { width: 390, steps: [], failures: [] };
+  const { targetId } = await cdp.send('Target.createTarget', { url: 'about:blank' });
+  const { sessionId } = await cdp.send('Target.attachToTarget', { targetId, flatten: true });
+  const send = (method, params = {}, milliseconds) => cdp.send(method, params, sessionId, milliseconds);
+  const evaluate = async (expression, milliseconds = 10000) => {
+    const value = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true }, milliseconds);
+    if (value.exceptionDetails) throw new Error(value.exceptionDetails.exception?.description || value.exceptionDetails.text);
+    return value.result.value;
+  };
+  const press = async (name, code) => {
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: name, code: name, windowsVirtualKeyCode: code,
+      nativeVirtualKeyCode: code, ...(name === 'Enter' ? { text: '\r', unmodifiedText: '\r' } : {}) });
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', key: name, code: name, windowsVirtualKeyCode: code, nativeVirtualKeyCode: code });
+  };
+  let loaded = false;
+  const listen = event => { if (event.sessionId === sessionId && event.method === 'Page.loadEventFired') loaded = true; };
+  cdp.listeners.add(listen);
+  const state = `({ hash: location.hash, sameDocument: window.__pvhvHistoryMarker === true,
+    expanded: document.getElementById('menu-toggle').getAttribute('aria-expanded'),
+    linksVisible: [...document.querySelectorAll('#section-nav a')].filter(a => a.getClientRects().length).length,
+    historyLength: history.length })`;
+  const record = async step => { const value = { step, ...await evaluate(state) }; result.steps.push(value); return value; };
+  try {
+    await send('Page.enable');
+    await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
+    await send('Page.addScriptToEvaluateOnNewDocument', { source: "localStorage.setItem('ws-theme', 'light'); localStorage.removeItem('ws-lang');" });
+    const navigation = await send('Page.navigate', { url: `${origin}/index.html` }, 30000);
+    if (navigation.errorText) throw new Error(navigation.errorText);
+    await waitFor(() => loaded, 30000, 'Menu history load');
+    await evaluate('window.__pvhvHistoryMarker = true; true');
+    for (const target of ['demo', 'bibtex']) {
+      await evaluate("document.getElementById('menu-toggle').focus(); true");
+      await press('Enter', 13);
+      const open = await record(`open menu for #${target}`);
+      if (open.expanded !== 'true' || open.linksVisible !== 5) result.failures.push(`Menu did not open before choosing #${target}`);
+      await evaluate(`document.querySelector('#section-nav a[href="#${target}"]').focus(); true`);
+      await press('Enter', 13);
+      await waitFor(() => evaluate(`location.hash === '#${target}'`), 5000, `Navigate to #${target}`);
+      const chosen = await record(`choose #${target}`);
+      if (!chosen.sameDocument || chosen.expanded !== 'false' || chosen.linksVisible !== 0) {
+        result.failures.push(`Choosing #${target} must keep the page and close the menu: ${JSON.stringify(chosen)}`);
+      }
+    }
+    const back = async (expected, label) => {
+      loaded = false;
+      await evaluate('history.back(); true');
+      try {
+        await waitFor(() => evaluate(`location.hash === ${JSON.stringify(expected)}`), 5000, label);
+      } catch (error) {
+        result.failures.push(`${label}: ${error.message}`);
+      }
+      const value = await record(label);
+      if (value.hash !== expected || !value.sameDocument || loaded) {
+        result.failures.push(`${label} must stay on the page at ${JSON.stringify(expected)}: ${JSON.stringify(value)}`);
+      }
+    };
+    await back('#demo', 'Back after #bibtex');
+    await back('', 'Back after #demo');
+  } catch (error) {
+    result.failures.push(error.message);
+  } finally {
+    cdp.listeners.delete(listen);
     await cdp.send('Target.closeTarget', { targetId }).catch(() => {});
   }
   return result;
@@ -1046,15 +1306,35 @@ async function checkNoScript(origin) {
       const nav = document.getElementById('section-nav');
       return { menuVisible: Boolean(document.getElementById('menu-toggle').getClientRects().length),
         linksVisible: [...nav.querySelectorAll('a')].filter(a => a.getClientRects().length).length,
-        themeToggleVisible: Boolean(document.querySelector('.topbar [data-theme-toggle]').getClientRects().length),
+        controlsVisible: [...document.querySelectorAll('.nav .controls, [data-theme-toggle], [data-lang-toggle]')]
+          .filter(element => element.getClientRects().length).length,
         zoomButtonsVisible: [...document.querySelectorAll('[data-zoom]')].filter(button => button.getClientRects().length).length,
+        // Every link must be fully on screen and inside the nav's visible box (no scroller clipping).
+        navScroll: { scrollWidth: nav.scrollWidth, clientWidth: nav.clientWidth },
+        links: [...nav.querySelectorAll('a')].map(a => {
+          const box = a.getBoundingClientRect(), frame = nav.getBoundingClientRect();
+          return { text: a.textContent.trim(), left: box.left, right: box.right, top: box.top, bottom: box.bottom,
+            inside: box.width > 0 && box.height > 0 && box.left >= -1 && box.right <= innerWidth + 1 &&
+              box.left >= frame.left - 1 && box.right <= frame.right + 1 && box.top >= frame.top - 1 && box.bottom <= frame.bottom + 1 };
+        }),
+        notice: [...document.querySelectorAll('.slot-box')].map(box => ({ inDemo: Boolean(box.closest('#demo-root')),
+          role: box.getAttribute('role'), text: box.innerText.trim(), ko: box.querySelector('[data-ko]')?.getAttribute('data-ko') || '',
+          visible: box.getBoundingClientRect().width > 0 && box.getBoundingClientRect().height > 0 })),
         ...(${pageOverflow.toString()})() };
     })()` });
     Object.assign(result, value.value);
     if (result.menuVisible) result.failures.push('Menu button visible without JavaScript');
-    if (result.themeToggleVisible) result.failures.push('Theme toggle visible without JavaScript');
+    if (result.controlsVisible) result.failures.push('Theme or language toggle visible without JavaScript');
+    const [notice] = result.notice;
+    if (result.notice.length !== 1 || !notice.inDemo || !notice.visible || notice.role !== 'note' ||
+        notice.text !== NO_JS_NOTICE || !HANGUL.test(notice.ko)) {
+      result.failures.push(`Expected one visible no-JS demo notice in #demo-root: ${JSON.stringify(result.notice)}`);
+    }
     if (result.zoomButtonsVisible) result.failures.push('Zoom controls visible without JavaScript');
     if (result.linksVisible !== 5) result.failures.push(`Expected 5 visible section links without JavaScript, found ${result.linksVisible}`);
+    if (result.links.length !== 5 || result.links.some(link => !link.inside) || result.navScroll.scrollWidth > result.navScroll.clientWidth + 1) {
+      result.failures.push(`Section links clipped or off screen without JavaScript: ${JSON.stringify({ nav: result.navScroll, links: result.links })}`);
+    }
     if (result.overflow) result.failures.push('Horizontal overflow without JavaScript');
   } catch (error) {
     result.failures.push(error.message);
@@ -1080,12 +1360,24 @@ try {
       summary.failures.push(...result.failures.map(message => `${width}px ${theme}: ${message}`));
     }
   }
+  // Language matrix: Korean at 1440 light and 390 dark, the Korean fallback and the runtime switch.
+  for (const [width, height, theme] of [[1440, 900, 'light'], [390, 844, 'dark']]) {
+    const result = await checkWidth(origin, width, height, theme, 'ko');
+    summary.runs.push(result);
+    summary.failures.push(...result.failures.map(message => `${width}px ${theme} ko: ${message}`));
+  }
+  summary.koreanFallback = await checkVariant(origin, 1440, 900, 'light', 'fallback', 'ko');
+  summary.failures.push(...summary.koreanFallback.failures.map(message => `1440px light ko fallback: ${message}`));
+  summary.languageSwitch = await checkVariant(origin, 1440, 900, 'light', 'switch');
+  summary.failures.push(...summary.languageSwitch.failures.map(message => `1440px light language switch: ${message}`));
   summary.mastheadRuns = [];
   for (const theme of ['light', 'dark']) {
     const result = await checkVariant(origin, 1024, 768, theme, 'masthead');
     summary.mastheadRuns.push(result);
     summary.failures.push(...result.failures.map(message => `1024px ${theme} masthead: ${message}`));
   }
+  summary.menuHistory = await checkMenuHistory(origin);
+  summary.failures.push(...summary.menuHistory.failures.map(message => `390px menu history: ${message}`));
   summary.noScript = await checkNoScript(origin);
   summary.failures.push(...summary.noScript.failures.map(message => `390px without JavaScript: ${message}`));
 } catch (error) {
@@ -1103,5 +1395,12 @@ try {
   process.removeListener('unhandledRejection', uncaught);
 }
 summary.result = summary.failures.length ? 'FAIL' : 'OK';
+summary.i18nAllowed = I18N_ALLOWED;
+try {
+  await writeFile(path.join(output, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
+} catch (error) {
+  summary.failures.push(`summary.json: ${error.message}`);
+  summary.result = 'FAIL';
+}
 console.log(JSON.stringify(summary, null, 2));
 process.exitCode = summary.failures.length ? 1 : 0;

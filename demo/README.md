@@ -74,7 +74,8 @@ committed, so git is the recovery mechanism if an export is interrupted.
 Serve the repository root with any static server, for example `python -m http.server`, and open
 `/demo/harness.html`. On the project page, the demo needs `<script src="assets/js/demo.js" defer></script>`,
 an element `#demo-root`, and a stylesheet defining the custom properties read by `demo.js`:
-`--fg`, `--card`, `--bg`, `--line`, `--line-strong`, `--muted`, `--accent-c`, `--focus` and `--radius-s`.
+`--ink`, `--surface`, `--bg`, `--line`, `--control`, `--muted`, `--accent`, `--focus` and `--r-s`.
+The demo follows the host page's `ws:lang` event and `html[lang]` for its English or Korean labels.
 There are no fallback colours: without these properties the demo still runs with browser-default colours and no theming.
 `demo/harness.html` shows a minimal set. Neither the shipped code nor its data makes any request to another origin.
 

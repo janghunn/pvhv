@@ -1,0 +1,25 @@
+/* PVHV figure layout and project notes. */
+.figure-frame { border-radius: var(--r); overflow: hidden; background: var(--media-bg); }
+.figure-frame > img { width: 100%; height: auto; }
+.figure-frame.is-zoomed { overflow-x: auto; }
+.figure-frame.is-zoomed > img { max-width: none; }
+.zoom-toggle { margin-top: var(--s3); }
+@media (min-width: 860px) { .zoom-toggle { display: none; } }
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: var(--s4); }
+.panel { min-width: 0; max-width: 480px; width: 100%; justify-self: center; }
+.panel img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: var(--r-s); }
+.panel-cap { margin: var(--s2) 0 0; color: var(--ink); font-size: .88rem; line-height: 1.5; }
+.panel-title { display: block; font-weight: 700; }
+.method-fig .figure-frame, #demo-root { background: var(--surface); }
+.method-fig figcaption { border-top: 1px solid var(--line); padding-top: var(--s3); }
+figcaption { margin-top: var(--s2); }
+.credit { display: block; margin-top: var(--s1); }
+.venue a { display: inline-flex; align-items: center; min-height: 44px; }
+.reimpl-flag { margin: var(--s3) 0 0; color: var(--muted); font-size: .88rem; }
+.slot-box { padding: var(--s4); border: 1px dashed var(--control); border-radius: var(--r-s); background: var(--surface); color: var(--muted); }
+#demo-root > .note { margin-top: var(--s3); }
+.reimplementation-note h2 { margin-bottom: var(--s4); }
+#citation { white-space: pre-wrap; overflow-wrap: anywhere; }
+footer { margin-top: var(--s5); }
+/* A closed abstract keeps no layout boxes, so nothing (contrast samplers, hit tests) sees its hidden text. */
+@media screen { .abstract:not([open]) > :not(summary) { display: none; } }

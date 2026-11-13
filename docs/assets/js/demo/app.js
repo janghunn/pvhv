@@ -3,14 +3,38 @@
 import { DemoGL, DemoError, Superseded } from './gl.js';
 import { clampT, dragStep, initialT, keyStep, toBase64 } from './math.js';
 
-const SCENES = [['chess', 'Chess set'], ['blocks', 'Blocks']];
-const MODES = [['single', 'Single layer'], ['bdp', 'Full depth peeling (BDP)'], ['edp', 'EDP (PVHV culling)']];
-const HELP = 'Drag the image or use the arrow keys to move the novel viewpoint within the bound; ' +
-  'magenta marks disocclusion holes.';
-const VIEW_LABEL = 'Novel view. Drag, or use the arrow keys (Shift for larger steps), to move the viewpoint ' +
-  'within the bound; Home or 0 resets the view.';
-
-const fmt = n => n.toLocaleString('en-US');
+const SCENES = ['chess', 'blocks'];
+const MODES = ['single', 'bdp', 'edp'];
+const STRINGS = {
+  en: {
+    chess: 'Chess set', blocks: 'Blocks',
+    single: 'Single layer', bdp: 'Full depth peeling (BDP)', edp: 'EDP (PVHV culling)',
+    legend: 'Warping input', scene: 'Scene', reset: 'Reset view', highlight: 'Highlight fragments from hidden layers',
+    help: 'Drag the image or use the arrow keys to move the novel viewpoint within the bound; ' +
+      'magenta marks disocclusion holes.',
+    view: 'Novel view. Drag, or use the arrow keys (Shift for larger steps), to move the viewpoint ' +
+      'within the bound; Home or 0 resets the view.',
+    loading: () => 'Loading…',
+    loadingScene: id => `Loading ${STRINGS.en[id]}…`,
+    peeling: (id, method, h) => `Peeling the source view of ${STRINGS.en[id]}: ${method.toUpperCase()} layer ${fmt(h)}…`,
+    statistics: (n, L, m, p, holes) => `Source view: BDP keeps ${fmt(n)} hidden fragments in ${fmt(L)} layers; ` +
+      `EDP keeps ${fmt(m)} (−${fmt(p)}%). This view: ${fmt(holes)} hole pixels (magenta).`
+  },
+  ko: {
+    chess: '체스 세트', blocks: '블록',
+    single: '단일 레이어', bdp: '전체 깊이 필링 (BDP)', edp: 'EDP (PVHV 컬링)',
+    legend: '워핑 입력', scene: '장면', reset: '시점 초기화', highlight: '숨은 레이어에서 온 프래그먼트 강조',
+    help: '영상을 드래그하거나 화살표 키를 사용해 새 시점 범위 안에서 시점을 이동하세요. 마젠타는 가림 해제로 생긴 구멍을 나타냅니다.',
+    view: '새 시점입니다. 드래그하거나 화살표 키(Shift를 누르면 더 큰 간격)로 범위 안에서 시점을 이동하세요. Home 또는 0을 누르면 시점이 초기화됩니다.',
+    loading: () => '불러오는 중…',
+    loadingScene: id => `${STRINGS.ko[id]} 불러오는 중…`,
+    peeling: (id, method, h) => `${STRINGS.ko[id]}의 원본 시점 필링 중: ${method.toUpperCase()} 레이어 ${fmt(h)}…`,
+    statistics: (n, L, m, p, holes) => `원본 시점: BDP는 숨은 프래그먼트 ${fmt(n)}개를 ${fmt(L)}개 레이어에 유지하고, ` +
+      `EDP는 ${fmt(m)}개를 유지합니다 (−${fmt(p)}%). 이 시점: 구멍 픽셀 ${fmt(holes)}개 (마젠타).`
+  }
+};
+const lang = () => document.documentElement.lang === 'ko' ? 'ko' : 'en';
+const fmt = n => n.toLocaleString(lang() === 'ko' ? 'ko-KR' : 'en-US');
 
 function el(tag, attrs, children) {
   const e = document.createElement(tag);
@@ -43,7 +67,10 @@ class Demo {
     this.sceneGen = 0;
     this.readyPromise = this.waitReady(1);
     this.stats = null;
+    this.busyMessage = { key: 'loading', args: [] };
+    this.statusMessage = this.busyMessage;
     this.buildUi();
+    document.addEventListener('ws:lang', () => this.translate());
   }
 
   // ---- UI -----------------------------------------------------------------------------
@@ -52,41 +79,48 @@ class Demo {
     const stage = this.boot.container.querySelector('.pvhv-demo-stage');
     while (stage.firstChild) stage.removeChild(stage.firstChild);
     this.canvas = el('canvas', { className: 'pvhv-demo-view', width: '640', height: '360', tabindex: '0',
-      role: 'img', 'aria-label': VIEW_LABEL });
-    this.busy = el('div', { className: 'pvhv-demo-busy', text: 'Loading…' });
+      role: 'img', 'aria-label': STRINGS[lang()].view });
+    this.busy = el('div', { className: 'pvhv-demo-busy', text: STRINGS[lang()].loading() });
     const wrap = el('div', { className: 'pvhv-demo-viewwrap' }, [this.canvas]);
     wrap.insertAdjacentHTML('beforeend', BOUND_SVG);
     wrap.appendChild(this.busy);
     this.dot = wrap.querySelector('circle.dot');
 
-    const fieldset = el('fieldset', { className: 'pvhv-demo-modes' }, [el('legend', { text: 'Warping input' })]);
+    this.legend = el('legend');
+    const fieldset = el('fieldset', { className: 'pvhv-demo-modes' }, [this.legend]);
     const name = `pvhv-demo-mode-${Math.random().toString(36).slice(2, 8)}`;
     this.radios = {};
-    for (const [id, label] of MODES) {
+    this.modeLabels = {};
+    for (const id of MODES) {
       const input = el('input', { type: 'radio', name, value: id });
       input.checked = id === this.state.mode;
       input.addEventListener('change', () => { if (input.checked) this.setMode(id); });
       this.radios[id] = input;
-      fieldset.appendChild(el('label', {}, [input, document.createTextNode(label)]));
+      this.modeLabels[id] = document.createTextNode('');
+      fieldset.appendChild(el('label', {}, [input, this.modeLabels[id]]));
     }
     this.select = el('select', {});
-    for (const [id, label] of SCENES) this.select.appendChild(el('option', { value: id, text: label }));
+    for (const id of SCENES) this.select.appendChild(el('option', { value: id }));
     this.select.addEventListener('change', () => { this.setScene(this.select.value).catch(() => {}); });
-    const reset = el('button', { type: 'button', text: 'Reset view' });
-    reset.addEventListener('click', () => this.resetView());
+    this.reset = el('button', { type: 'button' });
+    this.reset.addEventListener('click', () => this.resetView());
     this.check = el('input', { type: 'checkbox' });
     this.check.addEventListener('change', () => this.setHighlight(this.check.checked));
+    this.sceneLabel = document.createTextNode('');
+    this.highlightLabel = document.createTextNode('');
     const controls = el('div', { className: 'pvhv-demo-controls' }, [
       fieldset,
-      el('label', {}, [document.createTextNode('Scene'), this.select]),
-      reset,
-      el('label', {}, [this.check, document.createTextNode('Highlight fragments from hidden layers')]),
+      el('label', {}, [this.sceneLabel, this.select]),
+      this.reset,
+      el('label', {}, [this.check, this.highlightLabel]),
     ]);
-    this.status = el('p', { className: 'pvhv-demo-status', 'aria-live': 'polite', text: 'Loading…' });
+    this.status = el('p', { className: 'pvhv-demo-status', 'aria-live': 'polite', text: STRINGS[lang()].loading() });
     stage.appendChild(wrap);
-    stage.appendChild(el('p', { className: 'pvhv-demo-help', text: HELP }));
+    this.help = el('p', { className: 'pvhv-demo-help' });
+    stage.appendChild(this.help);
     stage.appendChild(controls);
     stage.appendChild(this.status);
+    this.translate();
     this.bindInput();
   }
 
@@ -136,11 +170,31 @@ class Demo {
     });
   }
 
-  setBusy(text) {
-    this.busy.hidden = !text;
-    if (text) {
-      this.busy.textContent = text;
-      this.status.textContent = text;
+  renderMessage(message) {
+    return STRINGS[lang()][message.key](...message.args);
+  }
+
+  translate() {
+    const text = STRINGS[lang()];
+    this.legend.textContent = text.legend;
+    for (const id of MODES) this.modeLabels[id].textContent = text[id];
+    for (const option of this.select.options) option.textContent = text[option.value];
+    this.sceneLabel.textContent = text.scene;
+    this.reset.textContent = text.reset;
+    this.highlightLabel.textContent = text.highlight;
+    this.help.textContent = text.help;
+    this.canvas.setAttribute('aria-label', text.view);
+    if (this.busyMessage) this.busy.textContent = this.renderMessage(this.busyMessage);
+    if (this.statusMessage) this.status.textContent = this.renderMessage(this.statusMessage);
+  }
+
+  setBusy(key, ...args) {
+    this.busyMessage = key ? { key, args } : null;
+    this.busy.hidden = !key;
+    if (key) {
+      this.statusMessage = this.busyMessage;
+      this.busy.textContent = this.renderMessage(this.busyMessage);
+      this.status.textContent = this.busy.textContent;
     }
   }
 
@@ -157,8 +211,8 @@ class Demo {
     const n = sum(sc.layers.bdp);
     const m = sum(sc.layers.edp);
     const p = n > 0 ? Math.round(100 * (1 - m / n)) : 0;
-    this.status.textContent = `Source view: BDP keeps ${fmt(n)} hidden fragments in ${sc.layers.bdp.length} layers; ` +
-      `EDP keeps ${fmt(m)} (−${p}%). This view: ${fmt(this.stats.holes)} hole pixels (magenta).`;
+    this.statusMessage = { key: 'statistics', args: [n, sc.layers.bdp.length, m, p, this.stats.holes] };
+    this.status.textContent = this.renderMessage(this.statusMessage);
   }
 
   // ---- state ----------------------------------------------------------------------------
@@ -176,7 +230,7 @@ class Demo {
   }
 
   setMode(m) {
-    if (!MODES.some(([id]) => id === m)) throw new Error(`unknown mode ${m}`);
+    if (!MODES.includes(m)) throw new Error(`unknown mode ${m}`);
     this.state.mode = m;
     if (!this.radios[m].checked) this.radios[m].checked = true;
     this.requestRender();
@@ -276,9 +330,8 @@ class Demo {
   }
 
   async loadScene(id, cancelled) {
-    const title = (SCENES.find(s => s[0] === id) || [id, id])[1];
     const dir = new URL(`../demo/${id}/`, this.base);
-    this.setBusy(`Loading ${title}…`);
+    this.setBusy('loadingScene', id);
     const data = await this.fetchOk(new URL('scene.json', dir), 'json');
     if (cancelled()) throw new Superseded();
     const [geometry, images] = await Promise.all([
@@ -292,7 +345,7 @@ class Demo {
     const sc = this.gpu.createScene(data, geometry, byFile);
     try {
       await this.gpu.peelScene(sc, cancelled, (method, h) => {
-        if (!cancelled()) this.setBusy(`Peeling the source view of ${title}: ${method.toUpperCase()} layer ${h}…`);
+        if (!cancelled()) this.setBusy('peeling', id, method, h);
       });
       if (cancelled()) throw new Superseded();
     } catch (error) {
@@ -304,7 +357,7 @@ class Demo {
 
   /** Load scene `id`; a later call supersedes an earlier one.  Resolves after its first frame. */
   setScene(id) {
-    if (!SCENES.some(s => s[0] === id)) return Promise.reject(new Error(`unknown scene ${id}`));
+    if (!SCENES.includes(id)) return Promise.reject(new Error(`unknown scene ${id}`));
     if (this.dead) return Promise.reject(new Error('the demo stopped'));
     const gen = ++this.gen;
     const done = gen === 1 ? this.readyPromise : this.waitReady(gen);
@@ -323,7 +376,7 @@ class Demo {
       this.select.value = id;
       this.boot.setAttribution(sc.data);
       this.gpu.disposeScene(old);
-      this.setBusy('');
+      this.setBusy(null);
       this.updateDot();
       this.requestRender();
     }, error => {
@@ -366,7 +419,7 @@ class Demo {
 
   readWarp(mode, tx, ty) {
     const sc = this.requireScene();
-    if (!MODES.some(([id]) => id === mode)) throw new Error(`unknown mode ${mode}`);
+    if (!MODES.includes(mode)) throw new Error(`unknown mode ${mode}`);
     const { W, H } = sc.data;
     this.gpu.warp(sc, mode, [tx, ty]);
     const tex = sc.warp.tex;

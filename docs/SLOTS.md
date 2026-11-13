@@ -4,9 +4,10 @@ T04 filled all figure slots with the files below. Each image uses its actual dim
 
 The `method-overview` slot holds three panels (a)–(c), redrawn in T06 after Figs. 2 and 3(a) and Sec. 4.1/Fig. 7 of the paper; its `data-src` and `data-aspect` list the panel files and aspects in order (space-separated in the HTML, comma-separated here), and each panel has an HTML sub-caption inside the figure. Panel text is sized for at least 11 CSS px at a 300 px panel width (14 viewBox units at a 360-unit-wide viewBox).
 
-The method SVGs keep hard-coded colours on a white mat in both themes because an `<img>` SVG cannot read page tokens, so the colour words in the caption hold in both.
+The method SVGs paint their own white background and keep hard-coded colours in both themes, because an `<img>` SVG cannot read page tokens, so the caption's colour words hold in both.
+Captions, alt text and labels have Korean counterparts (`data-ko`, `data-ko-alt`), and the figure lettering stays English.
 
-The WebGL2 demo is mounted into `#demo-root` by `<script src="assets/js/demo.js" defer></script>`. Its remaining `.slot-box` is replaced at runtime by the interactive canvas or an accessible fallback, with the re-implementation label and scene attribution.
+The WebGL2 demo is mounted into `#demo-root` by `<script src="assets/js/demo.js" defer></script>`. Its remaining `.slot-box` is a no-JavaScript notice, replaced at runtime by the interactive canvas or an accessible fallback, with the re-implementation label and scene attribution.
 
 | slot | expected file | aspect | caption | alt text | filled by |
 | --- | --- | --- | --- | --- | --- |
