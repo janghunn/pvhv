@@ -2,8 +2,11 @@
 
 The renderer's textured test scenes are third-party models. Two of them, San Miguel and Bistro, are scenes that
 QUASAR (Lu & Rowe, ACM TOG 44(4), SIGGRAPH 2025) also evaluates on. The third is a CC0 chess set from Poly
-Haven. Each is downloaded from its original publisher. **The model binaries are not committed to this
-repository** because of their size. `fetch_models.py` downloads them into `models/cache/`, which is git-ignored,
+Haven. Each is downloaded from its original publisher. **The original model downloads are not committed to this
+repository** because of their size. Apart from rendered images, the only committed model data is the demo's re-exported CC0 chess
+geometry and its three unchanged diffuse JPEGs in `docs/assets/demo/chess/` (see
+[`../docs/assets/demo/ATTRIBUTION.md`](../docs/assets/demo/ATTRIBUTION.md)).
+`fetch_models.py` downloads the original files into `models/cache/`, which is git-ignored,
 and checks the byte size and SHA-256 of every downloaded file against `manifest.json`.
 
 | scene id | model | QUASAR reference | copyright | licence | source |
@@ -23,7 +26,7 @@ require attribution; the chess line is given as a courtesy.
 
 ## Licence note
 
-The models themselves are not redistributed here.
+San Miguel and Bistro are not redistributed here. The CC0 chess set is redistributed only as the demo data named above.
 
 - **San Miguel.** The McGuire archive lists CC BY 3.0 for San Miguel. The `license.txt` bundled in
   `San_Miguel.zip` (labelled "San Miguel 2.1") states: "This model is free for research and educational use with

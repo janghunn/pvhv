@@ -105,5 +105,6 @@ with the numpy Algorithm 1 reference (`pvhv/pvhv_cpu.py`), warp geometry against
 
 This is a clean-room implementation written from the paper's text only. No code, slides or videos from the
 paper's authors or from other implementations were consulted. Scene models are third-party assets downloaded
-from their publishers and are not part of this repository; see [`../models/README.md`](../models/README.md) for
-their licences and attribution.
+from their publishers; the renderer does not commit them (the demo ships re-exported CC0 chess data; see
+[`../docs/assets/demo/ATTRIBUTION.md`](../docs/assets/demo/ATTRIBUTION.md)). See
+[`../models/README.md`](../models/README.md) for their licences and attribution.

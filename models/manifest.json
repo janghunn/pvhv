@@ -158,7 +158,7 @@
       ],
       "extract_to": "chess",
       "main_obj": "chess/chess_set_1k.gltf",
-      "redistribution": "allowed (CC0 1.0; attribution given as a courtesy) — not committed (size); fetched by script"
+      "redistribution": "allowed (CC0 1.0; attribution given as a courtesy) — original files fetched by script (size); the demo commits re-exported geometry and the three diffuse JPEGs under docs/assets/demo/chess/"
     }
   ]
 }
