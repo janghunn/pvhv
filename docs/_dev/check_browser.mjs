@@ -24,7 +24,7 @@ const MIN_TEXT_CONTRAST = 4.5;
 const TEXT = {
   en: { affiliation: 'Sungkyunkwan University, Suwon, South Korea',
     venue: 'ACM Transactions on Graphics 42(4), Article 86, August 2023 (SIGGRAPH 2023)', venuePrefix: 'Published in ',
-    resources: ['Paper', 'PDF', 'Code', 'BibTeX'], firstLinks: ['Overview', 'Method'],
+    resources: ['Paper', 'Code', 'BibTeX'], firstLinks: ['Overview', 'Method'],
     toDark: 'Switch to dark theme', toLight: 'Switch to light theme', langButton: '한국어',
     zoom: 'Zoom to read labels', fit: 'Fit image to width', region: 'Enlarged image, scroll sideways',
     copied: 'Copied.', selected: 'Selected.',
@@ -33,7 +33,7 @@ const TEXT = {
     attribution: 'Scene: Chess Set by Riley Queen, Poly Haven, CC0 1.0' },
   ko: { affiliation: '성균관대학교, 대한민국 수원',
     venue: 'ACM Transactions on Graphics 42(4), Article 86, 2023년 8월 (SIGGRAPH 2023)', venuePrefix: '게재: ',
-    resources: ['논문', 'PDF', '코드', 'BibTeX'], firstLinks: ['개요', '방법'],
+    resources: ['논문', '코드', 'BibTeX'], firstLinks: ['개요', '방법'],
     toDark: '다크 테마로 전환', toLight: '라이트 테마로 전환', langButton: 'English',
     zoom: '라벨을 읽도록 확대', fit: '이미지를 너비에 맞춤', region: '확대한 이미지, 옆으로 스크롤',
     copied: '복사했습니다.', selected: '선택했습니다.',

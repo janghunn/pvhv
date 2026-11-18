@@ -130,7 +130,6 @@ def check_navigation(page, facts):
     anchors = [node for node in rows[0].descendants() if node.tag == "a"]
     expected = [
         ("Paper", "https://doi.org/10.1145/3592108"),
-        ("PDF", "https://dl.acm.org/doi/pdf/10.1145/3592108"),
         ("Code", "https://github.com/janghunn/pvhv"),
         ("BibTeX", "#bibtex"),
     ]
@@ -138,12 +137,11 @@ def check_navigation(page, facts):
     require(all(node.has_class("btn") for node in anchors),
             "each resource must be a kit button")
     require(anchors[0].has_class("primary"), "Paper must be the primary resource")
-    equal(anchors[1].attrs.get("title"), "PDF from the ACM Digital Library (open access)", "PDF title")
-    for node in anchors[:3]:
+    for node in anchors[:2]:
         require(node.attrs.get("target") == "_blank"
                 and set((node.attrs.get("rel") or "").split()) == {"noopener", "noreferrer"},
                 f"{node.text()}: external resource must open safely in a new tab")
-    for key, index in (("doi_url", 0), ("pdf_url", 1), ("code_url", 2)):
+    for key, index in (("doi_url", 0), ("code_url", 1)):
         equal(facts[key], expected[index][1], key)
     nav = [node for node in page.nodes() if node.tag == "nav" and node.attrs.get("aria-label") == "Sections"]
     require(len(nav) == 1, "expected one section navigation")
@@ -155,7 +153,7 @@ def check_navigation(page, facts):
             "menu toggle must be a hidden button[aria-expanded=false][aria-controls=section-nav] until JS enables it")
     require(nav[0].attrs.get("id") == "section-nav" and "hidden" not in nav[0].attrs,
             "section links must stay visible without JavaScript")
-    return ("exact Paper/PDF/Code/BibTeX resources and Overview/Method/Demo/Results/BibTeX navigation; "
+    return ("exact Paper/Code/BibTeX resources and Overview/Method/Demo/Results/BibTeX navigation; "
             "Menu is progressive (links visible without JS)")
 
 
